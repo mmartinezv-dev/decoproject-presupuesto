@@ -8,14 +8,17 @@ import { BudgetsModule } from './budgets/budgets.module';
 import { CategoriesModule } from './categories/categories.module';
 import { AuthModule } from './auth/auth.module';
 
-const dbPath = join(__dirname, '..', 'database.sqlite');
 const frontendPath = join(__dirname, '..', '..', 'frontend', 'dist');
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'better-sqlite3',
-      database: dbPath,
+      type: 'mysql',
+      host: process.env.DB_HOST ?? 'localhost',
+      port: Number(process.env.DB_PORT) || 3306,
+      username: process.env.DB_USER ?? 'decoproject',
+      password: process.env.DB_PASS ?? '',
+      database: process.env.DB_NAME ?? 'decoproject',
       autoLoadEntities: true,
       synchronize: true,
     }),
