@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+frontend/dist/
+backend/public/
+
+# Claude Code internals
+.agents/
+skills-lock.json
+
+# Database
+*.sqlite
+*.sqlite-journal
+
+# AWS / SSH keys
+*.pem
+aws/
+
+# Release artifacts
+release/
+*.tar.gz
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
