@@ -19,7 +19,7 @@ export function useBudget() {
   })
 
   const client = reactive({ id: 0, name: '', rut: '', address: '', phone: '' })
-  const logo = ref('')
+  const logo = ref('/logo-presupuesto.jpeg')
   const notes = ref(DEFAULT_NOTES)
   const sections = ref<BudgetSection[]>([{ title: 'Productos', items: [createEmptyRow()] }])
   const images = ref<{ src: string; caption: string }[]>([])
