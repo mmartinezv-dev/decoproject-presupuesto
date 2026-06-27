@@ -26,6 +26,9 @@ release/
 .env
 .env.*
 
+# PM2 config with secrets (managed directly on server)
+backend/ecosystem.config.js
+
 # OS
 .DS_Store
 Thumbs.db
