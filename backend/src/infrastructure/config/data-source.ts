@@ -1,6 +1,8 @@
-import 'dotenv/config';
-import { DataSource } from 'typeorm';
+import { config } from 'dotenv';
 import { join } from 'path';
+config({ path: join(__dirname, '..', '..', '..', '.env') });
+
+import { DataSource } from 'typeorm';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
