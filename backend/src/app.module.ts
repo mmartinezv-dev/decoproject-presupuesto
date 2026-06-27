@@ -7,21 +7,13 @@ import { CategoryModule } from './presentation/modules/category.module';
 import { ProductModule } from './presentation/modules/product.module';
 import { ClientModule } from './presentation/modules/client.module';
 import { BudgetModule } from './presentation/modules/budget.module';
+import { getTypeOrmConfig } from './infrastructure/config/typeorm.config';
 
 const frontendPath = join(__dirname, '..', '..', 'frontend', 'dist');
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST ?? 'localhost',
-      port: Number(process.env.DB_PORT) || 3306,
-      username: process.env.DB_USER ?? 'decoproject',
-      password: process.env.DB_PASS ?? '',
-      database: process.env.DB_NAME ?? 'decoproject',
-      autoLoadEntities: true,
-      synchronize: true,
-    }),
+    TypeOrmModule.forRoot(getTypeOrmConfig()),
     ServeStaticModule.forRoot({
       rootPath: frontendPath,
     }),

@@ -1,13 +1,24 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
+import {
+  Entity, PrimaryGeneratedColumn, Column, OneToMany,
+  CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index,
+} from 'typeorm';
 import { BudgetItemOrmEntity } from './budget-item.orm-entity';
 
-@Entity()
+@Entity('budget')
+@Index('IDX_budget_clientRut', ['clientRut'])
+@Index('IDX_budget_createdAt', ['createdAt'])
 export class BudgetOrmEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date | null;
 
   @Column({ default: '' })
   companyName: string;

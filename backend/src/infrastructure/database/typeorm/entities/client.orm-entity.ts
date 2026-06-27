@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 
-@Entity()
+@Entity('client')
+@Index('IDX_client_rut', ['rut'])
 export class ClientOrmEntity {
   @PrimaryGeneratedColumn()
   id: number;

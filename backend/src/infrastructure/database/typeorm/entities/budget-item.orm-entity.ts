@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { BudgetOrmEntity } from './budget.orm-entity';
 
-@Entity()
+@Entity('budget_item')
 export class BudgetItemOrmEntity {
   @PrimaryGeneratedColumn()
   id: number;
