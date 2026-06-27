@@ -1,0 +1,34 @@
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { ProductApplicationService } from '../../../application/product/product.application-service';
+import { CreateProductDto } from '../dtos/product/create-product.dto';
+import { UpdateProductDto } from '../dtos/product/update-product.dto';
+
+@Controller('products')
+export class ProductsController {
+  constructor(private readonly productsService: ProductApplicationService) {}
+
+  @Get()
+  findAll(@Query('q') q?: string) {
+    return q ? this.productsService.search(q) : this.productsService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.findOne(id);
+  }
+
+  @Post()
+  create(@Body() dto: CreateProductDto) {
+    return this.productsService.create(dto);
+  }
+
+  @Put(':id')
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
+    return this.productsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.remove(id);
+  }
+}
