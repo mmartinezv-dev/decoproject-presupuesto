@@ -1,39 +1,42 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { api } from '../composables/useApi'
+import { ref } from 'vue'
+import { useBudgetsList } from '../features/budgets/queries/useBudgetsList'
+import { useDeleteBudget } from '../features/budgets/mutations/useDeleteBudget'
 import { useFormat } from '../composables/useFormat'
-import type { Budget } from '../types'
+import BudgetListSkeleton from '../features/budgets/components/BudgetListSkeleton.vue'
 
 const { clp } = useFormat()
 
-const budgets = ref<Pick<Budget, 'id' | 'createdAt' | 'clientName' | 'total'>[]>([])
+const { data: budgets, isLoading, isError, error } = useBudgetsList()
 
-async function load() {
-  try {
-    budgets.value = await api.get('/budgets')
-  } catch (err) {
-    console.error('Error al cargar presupuestos:', err)
-  }
-}
+const { mutate: deleteBudget, isPending: isDeleting } = useDeleteBudget()
+const deletingId = ref<number | null>(null)
 
-async function remove(id: number) {
+function handleDelete(id: number) {
   if (!confirm('¿Eliminar este presupuesto?')) return
-  try {
-    await api.del(`/budgets/${id}`)
-    await load()
-  } catch (err) {
-    console.error('Error al eliminar presupuesto:', err)
-    alert('Error al eliminar. Intentá de nuevo.')
-  }
+  deletingId.value = id
+  deleteBudget(id, {
+    onSettled: () => { deletingId.value = null },
+  })
 }
-
-onMounted(load)
 </script>
 
 <template>
   <h1 class="text-2xl font-bold mb-4">Presupuestos Guardados</h1>
 
-  <table class="w-full bg-white rounded shadow text-sm">
+  <!-- Cargando -->
+  <BudgetListSkeleton v-if="isLoading" :rows="6" />
+
+  <!-- Error -->
+  <div
+    v-else-if="isError"
+    class="p-4 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
+  >
+    Error al cargar presupuestos: {{ (error as Error)?.message }}
+  </div>
+
+  <!-- Datos -->
+  <table v-else class="w-full bg-white rounded shadow text-sm">
     <thead class="bg-gray-100">
       <tr>
         <th class="text-left p-2">#</th>
@@ -44,18 +47,35 @@ onMounted(load)
       </tr>
     </thead>
     <tbody>
-      <tr v-for="b in budgets" :key="b.id" class="border-t hover:bg-gray-50">
+      <tr
+        v-for="b in budgets"
+        :key="b.id"
+        class="border-t hover:bg-gray-50"
+      >
         <td class="p-2">{{ b.id }}</td>
-        <td class="p-2">{{ new Date(b.createdAt!).toLocaleDateString('es-CL') }}</td>
+        <td class="p-2">{{ new Date(b.createdAt).toLocaleDateString('es-CL') }}</td>
         <td class="p-2">{{ b.clientName || 'Sin cliente' }}</td>
         <td class="p-2 text-right font-medium">{{ clp(b.total) }}</td>
         <td class="p-2 flex gap-2 justify-center">
-          <router-link :to="`/presupuestos/${b.id}`" class="text-blue-600 hover:underline text-xs">Ver/Editar</router-link>
-          <button class="text-red-600 hover:underline text-xs" @click="remove(b.id!)">Eliminar</button>
+          <router-link
+            :to="`/presupuestos/${b.id}`"
+            class="text-blue-600 hover:underline text-xs"
+          >
+            Ver/Editar
+          </router-link>
+          <button
+            class="text-red-600 hover:underline text-xs disabled:opacity-40"
+            :disabled="isDeleting && deletingId === b.id"
+            @click="handleDelete(b.id)"
+          >
+            {{ isDeleting && deletingId === b.id ? '...' : 'Eliminar' }}
+          </button>
         </td>
       </tr>
-      <tr v-if="!budgets.length">
-        <td colspan="5" class="p-4 text-center text-gray-400">Sin presupuestos guardados</td>
+      <tr v-if="!budgets?.length">
+        <td colspan="5" class="p-4 text-center text-gray-400">
+          Sin presupuestos guardados
+        </td>
       </tr>
     </tbody>
   </table>
