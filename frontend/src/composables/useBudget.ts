@@ -1,4 +1,5 @@
 import { ref, reactive, computed } from 'vue'
+import { toast } from 'vue-sonner'
 import { api } from './useApi'
 import type { BudgetItem, BudgetSection, CompanyInfo, Budget } from '../types'
 
@@ -74,15 +75,21 @@ export function useBudget() {
   function removeFinding(i: number) { visitFindings.value.splice(i, 1) }
   function updateFinding(i: number, v: string) { visitFindings.value[i].text = v }
 
-  function addFindingImages(findingIndex: number, e: Event) {
+  async function uploadFiles(files: FileList): Promise<string[]> {
+    const fd = new FormData()
+    for (const file of Array.from(files)) {
+      fd.append('files', file)
+    }
+    const results = await api.upload<{ url: string }[]>('/uploads', fd)
+    return results.map((r) => r.url)
+  }
+
+  async function addFindingImages(findingIndex: number, e: Event) {
     const files = (e.target as HTMLInputElement).files
     if (!files) return
-    for (const file of Array.from(files)) {
-      const reader = new FileReader()
-      reader.onload = () => {
-        visitFindings.value[findingIndex].images.push({ src: reader.result as string, caption: '' })
-      }
-      reader.readAsDataURL(file)
+    const urls = await uploadFiles(files)
+    for (const url of urls) {
+      visitFindings.value[findingIndex].images.push({ src: url, caption: '' })
     }
     ;(e.target as HTMLInputElement).value = ''
   }
@@ -100,14 +107,15 @@ export function useBudget() {
   function updateWork(i: number, v: string) { preliminaryWorks.value[i] = v }
 
   // --- Evidence images ---
-  function addImages(e: Event) {
-    const files = (e.target as HTMLInputElement).files
+  async function addImages(e: Event) {
+    const input = e.target as HTMLInputElement
+    const files = input.files
     if (!files) return
-    for (const file of Array.from(files)) {
-      const reader = new FileReader()
-      reader.onload = () => { images.value.push({ src: reader.result as string, caption: '' }) }
-      reader.readAsDataURL(file)
+    const urls = await uploadFiles(files)
+    for (const url of urls) {
+      images.value.push({ src: url, caption: '' })
     }
+    input.value = ''
   }
 
   function removeImage(index: number) {
@@ -119,14 +127,11 @@ export function useBudget() {
   }
 
   // --- Logo ---
-  function handleLogoChange(e: Event) {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      logo.value = reader.result as string
-    }
-    reader.readAsDataURL(file)
+  async function handleLogoChange(e: Event) {
+    const files = (e.target as HTMLInputElement).files
+    if (!files || files.length === 0) return
+    const urls = await uploadFiles(files)
+    if (urls[0]) logo.value = urls[0]
   }
 
   // --- Persistence ---
@@ -212,9 +217,8 @@ export function useBudget() {
         await api.post('/budgets', payload)
       }
       return true
-    } catch (err) {
-      console.error('Error al guardar presupuesto:', err)
-      alert('Error al guardar el presupuesto. Intentá de nuevo.')
+    } catch {
+      toast.error('Error al guardar el presupuesto. Intentá de nuevo.')
       return false
     } finally {
       saving.value = false

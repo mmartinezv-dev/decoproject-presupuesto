@@ -1,4 +1,5 @@
 import { type Ref, ref } from 'vue'
+import { toast } from 'vue-sonner'
 import { api } from './useApi'
 
 export function useCrud<T extends { id?: number }>(endpoint: string, createEmpty: () => T) {
@@ -9,8 +10,8 @@ export function useCrud<T extends { id?: number }>(endpoint: string, createEmpty
   async function load() {
     try {
       items.value = await api.get<T[]>(endpoint)
-    } catch (err) {
-      console.error(`Error al cargar ${endpoint}:`, err)
+    } catch {
+      // Graceful degradation — lista vacía visible para el usuario
     }
   }
 
@@ -18,14 +19,15 @@ export function useCrud<T extends { id?: number }>(endpoint: string, createEmpty
     try {
       if (editing.value && form.value.id) {
         await api.put(`${endpoint}/${form.value.id}`, form.value)
+        toast.success('Registro actualizado')
       } else {
         await api.post(endpoint, form.value)
+        toast.success('Registro creado')
       }
       reset()
       await load()
-    } catch (err) {
-      console.error(`Error al guardar en ${endpoint}:`, err)
-      alert('Error al guardar. Intentá de nuevo.')
+    } catch {
+      toast.error('Error al guardar. Intentá de nuevo.')
     }
   }
 
@@ -35,13 +37,12 @@ export function useCrud<T extends { id?: number }>(endpoint: string, createEmpty
   }
 
   async function remove(id: number) {
-    if (!confirm('¿Eliminar este registro?')) return
     try {
       await api.del(`${endpoint}/${id}`)
       await load()
-    } catch (err) {
-      console.error(`Error al eliminar en ${endpoint}:`, err)
-      alert('Error al eliminar. Intentá de nuevo.')
+      toast.success('Registro eliminado')
+    } catch {
+      toast.error('Error al eliminar. Intentá de nuevo.')
     }
   }
 

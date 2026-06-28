@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from './core/auth/useAuthStore'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -37,11 +38,25 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
-  const token = localStorage.getItem('auth_token')
-  if (!to.meta.public && !token) {
-    return '/login'
+router.beforeEach(async (to) => {
+  if (to.meta.public) return
+
+  const auth = useAuthStore()
+  if (auth.isLoggedIn) return
+
+  // Token not in memory (e.g. page reload) — try silent refresh via HttpOnly cookie
+  try {
+    const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' })
+    if (res.ok) {
+      const { accessToken } = await res.json()
+      auth.setToken(accessToken)
+      return
+    }
+  } catch {
+    // Network error or parse failure — fallback a login
   }
+
+  return '/login'
 })
 
 export default router

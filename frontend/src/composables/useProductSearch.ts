@@ -16,8 +16,7 @@ export function useProductSearch() {
     }
     try {
       searchResults.value = await api.get(`/products?q=${encodeURIComponent(query)}`)
-    } catch (err) {
-      console.error('Error al buscar productos:', err)
+    } catch {
       searchResults.value = []
     }
   }
