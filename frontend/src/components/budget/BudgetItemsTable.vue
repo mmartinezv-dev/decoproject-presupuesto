@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { Plus } from '@lucide/vue'
 import type { BudgetItem, Product } from '../../types'
 import { useFormat } from '../../composables/useFormat'
+import ProductQuickAddModal from './ProductQuickAddModal.vue'
 
 const props = defineProps<{
   sectionIndex: number
@@ -27,6 +29,27 @@ const emit = defineEmits<{
 const { clp } = useFormat()
 
 const UNITS = ['un', 'mt2', 'mt', 'ml', 'kg', 'gl', 'lt', 'm3']
+
+// ── Quick-add modal ──────────────────────────────────────────────
+const modalOpen        = ref(false)
+const modalInitialName = ref('')
+const capturedSection  = ref(-1)
+const capturedRow      = ref(-1)
+const currentQuery     = ref('')
+
+function openAddModal() {
+  capturedSection.value  = props.activeSectionIndex
+  capturedRow.value      = props.activeRowIndex
+  modalInitialName.value = currentQuery.value
+  emit('closeSearch')
+  modalOpen.value = true
+}
+
+function handleProductCreated(product: Product) {
+  if (capturedRow.value >= 0) {
+    emit('pick', product, capturedSection.value, capturedRow.value)
+  }
+}
 
 function rowSubtotal(row: BudgetItem) {
   return row.quantity * row.price
@@ -54,33 +77,34 @@ const dropdownStyle = computed(() => {
 <template>
   <div class="mb-6">
     <!-- Encabezado de sección -->
-    <div class="flex items-center gap-2 mb-3 no-print">
+    <div class="flex items-center gap-3 mb-3 no-print">
       <input
         :value="title"
-        class="text-xs font-bold text-blue-700 uppercase tracking-widest bg-transparent border-b border-transparent hover:border-blue-400 focus:border-blue-500 focus:outline-none w-full max-w-xs"
+        class="text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 bg-transparent border-b border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-brand-500 focus:outline-none w-full max-w-xs"
         @input="emit('updateTitle', sectionIndex, ($event.target as HTMLInputElement).value)"
       />
       <button
         v-if="canRemove"
-        class="text-slate-400 hover:text-red-500 transition-colors text-xs shrink-0"
+        class="text-xs text-zinc-400 hover:text-red-500 transition-colors shrink-0 flex items-center gap-1"
         title="Eliminar sección"
         @click="emit('removeSection', sectionIndex)"
       >
-        ✕ Eliminar sección
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        Eliminar sección
       </button>
     </div>
     <!-- Título solo impresión -->
-    <h2 class="hidden print:block text-xs font-bold text-blue-700 uppercase tracking-widest mb-3">{{ title }}</h2>
+    <h2 class="hidden print:block text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">{{ title }}</h2>
 
-    <div class="rounded-lg overflow-hidden border border-slate-200/60 bg-white/60 backdrop-blur-sm print-breakable">
+    <div class="rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 print-breakable">
       <table class="w-full text-sm">
         <thead>
-          <tr class="bg-slate-800 text-white">
-            <th class="text-left py-2.5 px-3 font-semibold">Descripción</th>
-            <th class="text-center py-2.5 px-2 font-semibold w-16">Unidad</th>
-            <th class="text-center py-2.5 px-2 font-semibold w-20">Cant.</th>
-            <th class="text-right py-2.5 px-3 font-semibold w-28">P. Unitario</th>
-            <th class="text-right py-2.5 px-3 font-semibold w-28">Subtotal</th>
+          <tr class="bg-zinc-900 dark:bg-zinc-950 text-zinc-100">
+            <th class="text-left py-3 px-4 font-semibold text-xs uppercase tracking-wide">Descripción</th>
+            <th class="text-center py-3 px-2 font-semibold text-xs uppercase tracking-wide w-16">Unidad</th>
+            <th class="text-center py-3 px-2 font-semibold text-xs uppercase tracking-wide w-20">Cant.</th>
+            <th class="text-right py-3 px-4 font-semibold text-xs uppercase tracking-wide w-28">P. Unitario</th>
+            <th class="text-right py-3 px-4 font-semibold text-xs uppercase tracking-wide w-28">Subtotal</th>
             <th class="w-10 no-print"></th>
           </tr>
         </thead>
@@ -88,31 +112,31 @@ const dropdownStyle = computed(() => {
           <tr
             v-for="(row, i) in items"
             :key="i"
-            class="border-b border-slate-200/60 hover:bg-blue-50/40 transition-colors"
+            class="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
           >
             <!-- Producto con autocompletado -->
             <td class="py-2 px-3">
               <input
                 :ref="(el) => { if (el) inputRefs[i] = el as HTMLInputElement }"
                 :value="row.productName"
-                class="no-print w-full bg-transparent border border-slate-300 rounded px-2 py-1 text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                class="no-print w-full rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                 placeholder="Buscar producto..."
-                @input="emit('search', ($event.target as HTMLInputElement).value, sectionIndex, i); emit('updateItem', sectionIndex, i, 'productName', ($event.target as HTMLInputElement).value)"
-                @blur="emit('closeSearch')"
+                @input="currentQuery = ($event.target as HTMLInputElement).value; emit('search', currentQuery, sectionIndex, i); emit('updateItem', sectionIndex, i, 'productName', currentQuery)"
+                @blur="currentQuery = ''; emit('closeSearch')"
               />
-              <span class="hidden print:inline text-slate-800">{{ row.productName }}</span>
+              <span class="hidden print:inline text-zinc-800">{{ row.productName }}</span>
             </td>
 
             <!-- Unidad -->
             <td class="py-2 px-2 text-center">
               <select
                 :value="row.unit"
-                class="no-print w-full bg-transparent border border-slate-300 rounded px-1 py-1 text-center text-sm focus:border-blue-500 outline-none"
+                class="no-print w-full rounded-md border border-zinc-200 bg-white px-1 py-1.5 text-center text-sm focus:border-brand-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                 @change="emit('updateItem', sectionIndex, i, 'unit', ($event.target as HTMLSelectElement).value)"
               >
                 <option v-for="u in UNITS" :key="u" :value="u">{{ u }}</option>
               </select>
-              <span class="hidden print:inline text-slate-700">{{ row.unit }}</span>
+              <span class="hidden print:inline text-zinc-700">{{ row.unit }}</span>
             </td>
 
             <!-- Cantidad -->
@@ -122,10 +146,10 @@ const dropdownStyle = computed(() => {
                 type="number"
                 min="0"
                 step="0.01"
-                class="no-print w-full bg-transparent border border-slate-300 rounded px-2 py-1 text-center focus:border-blue-500 outline-none"
+                class="no-print w-full rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-center text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                 @input="emit('updateItem', sectionIndex, i, 'quantity', +($event.target as HTMLInputElement).value)"
               />
-              <span class="hidden print:inline text-slate-700">{{ row.quantity }}</span>
+              <span class="hidden print:inline text-zinc-700">{{ row.quantity }}</span>
             </td>
 
             <!-- Precio unitario -->
@@ -134,35 +158,35 @@ const dropdownStyle = computed(() => {
                 :value="row.price"
                 type="number"
                 min="0"
-                class="no-print w-full bg-transparent border border-slate-300 rounded px-2 py-1 text-right focus:border-blue-500 outline-none"
+                class="no-print w-full rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-right text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                 @input="emit('updateItem', sectionIndex, i, 'price', +($event.target as HTMLInputElement).value)"
               />
-              <span class="hidden print:inline text-slate-700">{{ clp(row.price) }}</span>
+              <span class="hidden print:inline text-zinc-700">{{ clp(row.price) }}</span>
             </td>
 
             <!-- Subtotal -->
-            <td class="py-2 px-3 text-right font-semibold text-slate-800">
+            <td class="py-2 px-4 text-right font-semibold text-zinc-800 dark:text-zinc-200">
               {{ clp(rowSubtotal(row)) }}
             </td>
 
             <!-- Eliminar fila -->
             <td class="py-2 px-1 no-print text-center">
               <button
-                class="text-slate-400 hover:text-red-500 transition-colors text-lg leading-none"
+                class="rounded-md p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                 title="Eliminar fila"
                 @click="emit('removeRow', sectionIndex, i)"
               >
-                &times;
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </td>
           </tr>
         </tbody>
         <tfoot>
-          <tr class="bg-slate-50 border-t-2 border-slate-200">
-            <td colspan="4" class="py-2.5 px-3 text-sm font-semibold text-slate-600 text-right uppercase tracking-widest">
+          <tr class="bg-zinc-50 dark:bg-zinc-800/50 border-t-2 border-zinc-200 dark:border-zinc-700">
+            <td colspan="4" class="py-3 px-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 text-right uppercase tracking-widest">
               Subtotal {{ title }}
             </td>
-            <td class="py-2.5 px-3 text-right font-bold text-slate-800">
+            <td class="py-3 px-4 text-right font-bold text-zinc-800 dark:text-zinc-200">
               {{ clp(sectionTotal) }}
             </td>
             <td class="no-print" />
@@ -172,7 +196,7 @@ const dropdownStyle = computed(() => {
     </div>
 
     <button
-      class="no-print mt-3 text-sm text-blue-700 hover:text-blue-900 font-medium transition-colors"
+      class="no-print mt-3 text-sm text-brand-700 dark:text-brand-400 hover:text-brand-900 font-medium transition-colors"
       @click="emit('addRow', sectionIndex)"
     >
       + Agregar fila
@@ -180,21 +204,48 @@ const dropdownStyle = computed(() => {
 
     <!-- Dropdown autocompletado fuera del overflow-hidden -->
     <Teleport to="body">
-      <ul
-        v-if="activeSectionIndex === sectionIndex && activeRowIndex >= 0 && searchResults.length"
-        class="fixed z-50 bg-white border border-slate-200 shadow-lg rounded-lg max-h-40 overflow-auto no-print"
+      <div
+        v-if="activeSectionIndex === sectionIndex && activeRowIndex >= 0 && currentQuery.length > 0"
+        class="fixed z-50 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-xl rounded-xl overflow-hidden no-print"
         :style="dropdownStyle"
       >
-        <li
-          v-for="p in searchResults"
-          :key="p.id"
-          class="px-3 py-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center"
-          @mousedown="emit('pick', p, sectionIndex, activeRowIndex)"
-        >
-          <span class="text-slate-800 font-medium">{{ p.name }}</span>
-          <span class="text-slate-400 text-xs">{{ p.unit }} &middot; {{ clp(Number(p.price)) }}</span>
-        </li>
-      </ul>
+        <!-- Resultados -->
+        <ul v-if="searchResults.length" class="max-h-44 overflow-y-auto">
+          <li
+            v-for="p in searchResults"
+            :key="p.id"
+            class="px-3 py-2.5 hover:bg-brand-50 dark:hover:bg-brand-900/20 cursor-pointer flex justify-between items-center transition-colors"
+            @mousedown="emit('pick', p, sectionIndex, activeRowIndex)"
+          >
+            <span class="text-zinc-800 dark:text-zinc-200 font-medium text-sm">{{ p.name }}</span>
+            <span class="text-zinc-400 text-xs">{{ p.unit }} &middot; {{ clp(Number(p.price)) }}</span>
+          </li>
+        </ul>
+
+        <!-- Sin resultados -->
+        <div v-else class="px-3 py-2.5 text-xs text-zinc-400 dark:text-zinc-500">
+          Sin resultados para "{{ currentQuery }}"
+        </div>
+
+        <!-- Footer: crear nuevo -->
+        <div class="border-t border-zinc-100 dark:border-zinc-800">
+          <button
+            class="flex w-full items-center gap-2 px-3 py-2.5 text-xs font-medium text-brand-700 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
+            @mousedown.prevent="openAddModal"
+          >
+            <Plus class="h-3.5 w-3.5 shrink-0" />
+            Crear "{{ currentQuery }}" como nuevo producto
+          </button>
+        </div>
+      </div>
     </Teleport>
+
+    <!-- Modal de creación rápida -->
+    <ProductQuickAddModal
+      :open="modalOpen"
+      :initial-name="modalInitialName"
+      @close="modalOpen = false"
+      @created="handleProductCreated"
+    />
   </div>
 </template>
