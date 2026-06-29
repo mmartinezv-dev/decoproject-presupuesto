@@ -18,7 +18,8 @@ export function useCrud<T extends { id?: number }>(endpoint: string, createEmpty
   async function save() {
     try {
       if (editing.value && form.value.id) {
-        await api.put(`${endpoint}/${form.value.id}`, form.value)
+        const { id, ...body } = form.value
+        await api.put(`${endpoint}/${id}`, body)
         toast.success('Registro actualizado')
       } else {
         await api.post(endpoint, form.value)
@@ -32,7 +33,13 @@ export function useCrud<T extends { id?: number }>(endpoint: string, createEmpty
   }
 
   function edit(item: T) {
-    form.value = { ...item }
+    const template = createEmpty()
+    const keys = Object.keys(template) as (keyof T)[]
+    const picked = keys.reduce(
+      (acc, key) => { acc[key] = item[key]; return acc },
+      {} as T,
+    )
+    form.value = { ...picked, id: item.id }
     editing.value = true
   }
 
