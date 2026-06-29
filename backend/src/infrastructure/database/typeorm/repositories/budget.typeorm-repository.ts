@@ -30,13 +30,15 @@ export class BudgetTypeOrmRepository implements IBudgetRepository {
   }
 
   async create(data: Partial<BudgetEntity>): Promise<BudgetEntity> {
-    const { max } = await this.repo
-      .createQueryBuilder('b')
-      .select('MAX(b.correlativo)', 'max')
-      .getRawOne<{ max: number | null }>();
+    const [latest] = await this.repo.find({
+      select: { correlativo: true },
+      order: { correlativo: 'DESC' },
+      take: 1,
+      withDeleted: true,
+    });
     const budget = this.repo.create({
       ...(data as Partial<BudgetOrmEntity>),
-      correlativo: (max ?? 0) + 1,
+      correlativo: (latest?.correlativo ?? 0) + 1,
     });
     return this.repo.save(budget);
   }
