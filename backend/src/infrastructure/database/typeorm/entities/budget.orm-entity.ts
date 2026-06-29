@@ -71,13 +71,13 @@ export class BudgetOrmEntity {
   @Column({ type: 'simple-json', nullable: true, default: '[]' })
   images: { src: string; caption: string }[];
 
-  @Column('decimal', { precision: 14, scale: 2, default: 0 })
+  @Column('decimal', { precision: 14, scale: 2, default: 0, transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) } })
   neto: number;
 
-  @Column('decimal', { precision: 14, scale: 2, default: 0 })
+  @Column('decimal', { precision: 14, scale: 2, default: 0, transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) } })
   iva: number;
 
-  @Column('decimal', { precision: 14, scale: 2, default: 0 })
+  @Column('decimal', { precision: 14, scale: 2, default: 0, transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) } })
   total: number;
 
   @OneToMany(() => BudgetItemOrmEntity, (item) => item.budget, {

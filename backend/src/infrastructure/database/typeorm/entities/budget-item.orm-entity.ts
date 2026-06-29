@@ -18,12 +18,12 @@ export class BudgetItemOrmEntity {
   @Column({ default: 'un' })
   unit: string;
 
-  @Column('decimal', { precision: 12, scale: 2 })
+  @Column('decimal', { precision: 12, scale: 2, transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) } })
   quantity: number;
 
-  @Column('decimal', { precision: 12, scale: 2 })
+  @Column('decimal', { precision: 12, scale: 2, transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) } })
   price: number;
 
-  @Column('decimal', { precision: 14, scale: 2 })
+  @Column('decimal', { precision: 14, scale: 2, transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) } })
   subtotal: number;
 }

@@ -22,7 +22,12 @@ export class ProductOrmEntity {
   @Column({ default: 'un' })
   unit: string;
 
-  @Column('decimal', { precision: 12, scale: 2, default: 0 })
+  @Column('decimal', {
+    precision: 12,
+    scale: 2,
+    default: 0,
+    transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) },
+  })
   price: number;
 
   @ManyToOne(() => CategoryOrmEntity, {
