@@ -15,8 +15,6 @@ const mockTokenStore = {
   revoke: jest.fn(),
 };
 
-const VALID_USER = { sub: 'admin', jti: 'some-jti' };
-
 describe('AuthApplicationService', () => {
   let service: AuthApplicationService;
 

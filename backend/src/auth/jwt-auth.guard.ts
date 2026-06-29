@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
+import type { Request } from 'express';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
 @Injectable()
@@ -22,12 +23,12 @@ export class JwtAuthGuard implements CanActivate {
     ]);
     if (isPublic) return true;
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request & { user?: Record<string, unknown> }>();
     const token = this.extractToken(request);
     if (!token) throw new UnauthorizedException();
 
     try {
-      request.user = this.jwtService.verify(token, {
+      request.user = this.jwtService.verify<Record<string, unknown>>(token, {
         secret: process.env.JWT_SECRET ?? 'decoproject-secret-key',
       });
     } catch {
@@ -36,8 +37,8 @@ export class JwtAuthGuard implements CanActivate {
     return true;
   }
 
-  private extractToken(request: any): string | null {
+  private extractToken(request: Request): string | null {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : null;
+    return type === 'Bearer' ? (token ?? null) : null;
   }
 }

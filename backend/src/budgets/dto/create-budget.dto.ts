@@ -5,7 +5,7 @@ import { CreateBudgetItemDto } from './create-budget-item.dto';
 export class CreateBudgetDto {
   @IsString()
   @IsOptional()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }: { value: string | undefined }) => value?.trim())
   companyName?: string;
 
   @IsString()

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { AuthController } from './auth.controller';
 import { AuthApplicationService } from '../../../application/auth/auth.application-service';
 
@@ -10,11 +11,11 @@ const mockAuthService = {
 };
 
 function mockResponse() {
-  return { cookie: jest.fn(), clearCookie: jest.fn() } as any;
+  return { cookie: jest.fn(), clearCookie: jest.fn() } as unknown as Response;
 }
 
 function mockRequest(cookie?: string) {
-  return { cookies: cookie ? { refresh_token: cookie } : {} } as any;
+  return { cookies: cookie ? { refresh_token: cookie } : {} } as unknown as Request;
 }
 
 describe('AuthController', () => {
@@ -37,7 +38,7 @@ describe('AuthController', () => {
         refreshToken: 'refresh.token',
       });
       const res = mockResponse();
-      const result = await controller.login({ username: 'admin', password: 'admin123' } as any, res);
+      const result = await controller.login({ username: 'admin', password: 'admin123' }, res);
       expect(res.cookie).toHaveBeenCalledWith('refresh_token', 'refresh.token', expect.any(Object));
       expect(result).toEqual({ accessToken: 'access.token' });
     });

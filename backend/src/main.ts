@@ -48,4 +48,4 @@ async function bootstrap() {
   await app.listen(3000);
   logger.log('Servidor corriendo en http://localhost:3000');
 }
-bootstrap();
+void bootstrap();
