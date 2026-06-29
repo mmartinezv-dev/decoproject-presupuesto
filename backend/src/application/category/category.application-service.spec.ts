@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, Logger } from '@nestjs/common';
 import { CategoryApplicationService } from './category.application-service';
@@ -22,7 +23,9 @@ describe('CategoryApplicationService', () => {
 
   beforeEach(async () => {
     // Evitar que el logger ensucie la consola durante la ejecución de los tests
-    loggerSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    loggerSpy = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => {});
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -34,7 +37,9 @@ describe('CategoryApplicationService', () => {
       ],
     }).compile();
 
-    service = module.get<CategoryApplicationService>(CategoryApplicationService);
+    service = module.get<CategoryApplicationService>(
+      CategoryApplicationService,
+    );
     repository = module.get(CATEGORY_REPOSITORY);
     loggerSpy.mockClear();
   });

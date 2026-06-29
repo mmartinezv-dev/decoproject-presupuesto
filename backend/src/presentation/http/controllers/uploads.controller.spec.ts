@@ -1,7 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, Controller, Post, Body, ValidationPipe, Logger } from '@nestjs/common';
+import {
+  INestApplication,
+  Controller,
+  Post,
+  Body,
+  ValidationPipe,
+  Logger,
+} from '@nestjs/common';
 import { IsString, IsNotEmpty } from 'class-validator';
 import request from 'supertest';
+import { App } from 'supertest/types';
 import { UploadsController } from './uploads.controller';
 import { AllExceptionsFilter } from '../filters/all-exceptions.filter';
 import * as fs from 'fs';
@@ -30,13 +38,25 @@ class TestErrorController {
   }
 }
 
+interface UploadResult {
+  url: string;
+}
+
+interface ErrorResponse {
+  statusCode: number;
+  message: string | string[];
+}
+
 describe('Uploads & Exceptions Integration', () => {
-  let app: INestApplication;
-  const createdTestFiles: string[] = [];
+  let app: INestApplication<App>;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      controllers: [UploadsController, TestValidationController, TestErrorController],
+      controllers: [
+        UploadsController,
+        TestValidationController,
+        TestErrorController,
+      ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -54,7 +74,12 @@ describe('Uploads & Exceptions Integration', () => {
       const files = fs.readdirSync(uploadsDir);
       for (const file of files) {
         // Eliminar solo archivos que contengan el patrón de marca de tiempo único del test
-        if (file.includes('-') && (file.endsWith('.png') || file.endsWith('.svg') || file.endsWith('.html'))) {
+        if (
+          file.includes('-') &&
+          (file.endsWith('.png') ||
+            file.endsWith('.svg') ||
+            file.endsWith('.html'))
+        ) {
           try {
             fs.unlinkSync(path.join(uploadsDir, file));
           } catch {
@@ -77,11 +102,12 @@ describe('Uploads & Exceptions Integration', () => {
 
       // Assert
       expect(response.status).toBe(201);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0]).toHaveProperty('url');
-      expect(response.body[0].url).toContain('/uploads/');
-      expect(response.body[0].url.endsWith('.png')).toBe(true);
+      const body = response.body as UploadResult[];
+      expect(Array.isArray(body)).toBe(true);
+      expect(body).toHaveLength(1);
+      expect(body[0]).toHaveProperty('url');
+      expect(body[0].url).toContain('/uploads/');
+      expect(body[0].url.endsWith('.png')).toBe(true);
     });
 
     it('should reject uploading a malicious SVG file with 400 Bad Request (Unhappy Path)', async () => {
@@ -96,8 +122,9 @@ describe('Uploads & Exceptions Integration', () => {
 
       // Assert
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('statusCode', 400);
-      expect(response.body.message).toContain('Formato de imagen no permitido');
+      const body = response.body as ErrorResponse;
+      expect(body).toHaveProperty('statusCode', 400);
+      expect(body.message).toContain('Formato de imagen no permitido');
     });
 
     it('should reject uploading an HTML file with 400 Bad Request (Unhappy Path)', async () => {
@@ -112,7 +139,8 @@ describe('Uploads & Exceptions Integration', () => {
 
       // Assert
       expect(response.status).toBe(400);
-      expect(response.body.message).toContain('Formato de imagen no permitido');
+      const body = response.body as ErrorResponse;
+      expect(body.message).toContain('Formato de imagen no permitido');
     });
   });
 
@@ -128,7 +156,10 @@ describe('Uploads & Exceptions Integration', () => {
 
       // Assert
       expect(response.status).toBe(201);
-      expect(response.body).toEqual({ success: true, received: 'Construcción Local' });
+      expect(response.body).toEqual({
+        success: true,
+        received: 'Construcción Local',
+      });
     });
 
     it('should capture validation errors and propagate details array (Unhappy Path)', async () => {
@@ -142,25 +173,28 @@ describe('Uploads & Exceptions Integration', () => {
 
       // Assert
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('statusCode', 400);
-      expect(response.body).toHaveProperty('message');
+      const body = response.body as ErrorResponse;
+      expect(body).toHaveProperty('statusCode', 400);
+      expect(body).toHaveProperty('message');
       // Validar que se reciba el arreglo de mensajes de error de class-validator
-      expect(Array.isArray(response.body.message)).toBe(true);
-      expect(response.body.message[0]).toBe('El nombre es obligatorio para pruebas');
+      expect(Array.isArray(body.message)).toBe(true);
+      expect(body.message[0]).toBe('El nombre es obligatorio para pruebas');
     });
 
     it('should default to 500 and log error stack when a generic Error is thrown (Unhappy Path)', async () => {
       // Arrange
-      const errorLoggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+      const errorLoggerSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation(() => {});
 
       // Act
-      const response = await request(app.getHttpServer())
-        .post('/test-error');
+      const response = await request(app.getHttpServer()).post('/test-error');
 
       // Assert
       expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('statusCode', 500);
-      expect(response.body).toHaveProperty('message', 'Error interno del servidor');
+      const body = response.body as ErrorResponse;
+      expect(body).toHaveProperty('statusCode', 500);
+      expect(body).toHaveProperty('message', 'Error interno del servidor');
       expect(errorLoggerSpy).toHaveBeenCalled();
 
       errorLoggerSpy.mockRestore();

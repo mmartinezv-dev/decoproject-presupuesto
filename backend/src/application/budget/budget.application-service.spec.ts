@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, Logger } from '@nestjs/common';
 import { BudgetApplicationService } from './budget.application-service';
 import { BUDGET_REPOSITORY } from '../../domain/budget/repositories/budget.repository.interface';
-import type { IBudgetRepository, BudgetSummary } from '../../domain/budget/repositories/budget.repository.interface';
+import type {
+  IBudgetRepository,
+  BudgetSummary,
+} from '../../domain/budget/repositories/budget.repository.interface';
 import type { BudgetEntity } from '../../domain/budget/entities/budget.entity';
 
 describe('BudgetApplicationService', () => {
@@ -20,7 +24,9 @@ describe('BudgetApplicationService', () => {
 
   beforeEach(async () => {
     // Evitar que el logger ensucie la consola durante la ejecución de los tests
-    loggerSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    loggerSpy = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => {});
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -45,8 +51,18 @@ describe('BudgetApplicationService', () => {
     it('should return all budget summaries from the repository (Happy Path)', async () => {
       // Arrange
       const expectedSummaries: BudgetSummary[] = [
-        { id: 1, createdAt: new Date(), clientName: 'Juan Pérez', total: 119000 },
-        { id: 2, createdAt: new Date(), clientName: 'María Gómez', total: 59500 },
+        {
+          id: 1,
+          createdAt: new Date(),
+          clientName: 'Juan Pérez',
+          total: 119000,
+        },
+        {
+          id: 2,
+          createdAt: new Date(),
+          clientName: 'María Gómez',
+          total: 59500,
+        },
       ];
       repository.findAll.mockResolvedValueOnce(expectedSummaries);
 
@@ -83,7 +99,14 @@ describe('BudgetApplicationService', () => {
         iva: 19000,
         total: 119000,
         items: [
-          { productName: 'Insumo A', section: 'Materiales', unit: 'un', quantity: 2, price: 50000, subtotal: 100000 }
+          {
+            productName: 'Insumo A',
+            section: 'Materiales',
+            unit: 'un',
+            quantity: 2,
+            price: 50000,
+            subtotal: 100000,
+          },
         ],
       };
       repository.findById.mockResolvedValueOnce(expectedBudget);
@@ -118,7 +141,14 @@ describe('BudgetApplicationService', () => {
         iva: 19000,
         total: 119000,
         items: [
-          { productName: 'Insumo A', section: 'Materiales', unit: 'un', quantity: 2, price: 50000, subtotal: 100000 }
+          {
+            productName: 'Insumo A',
+            section: 'Materiales',
+            unit: 'un',
+            quantity: 2,
+            price: 50000,
+            subtotal: 100000,
+          },
         ],
       };
       const createdBudget: BudgetEntity = {
@@ -141,7 +171,15 @@ describe('BudgetApplicationService', () => {
         iva: 19000,
         total: 119000,
         items: [
-          { id: 10, productName: 'Insumo A', section: 'Materiales', unit: 'un', quantity: 2, price: 50000, subtotal: 100000 }
+          {
+            id: 10,
+            productName: 'Insumo A',
+            section: 'Materiales',
+            unit: 'un',
+            quantity: 2,
+            price: 50000,
+            subtotal: 100000,
+          },
         ],
       };
       repository.create.mockResolvedValueOnce(createdBudget);
@@ -154,7 +192,9 @@ describe('BudgetApplicationService', () => {
       expect(result.iva).toBe(result.neto * 0.19);
       expect(result.total).toBe(result.neto + result.iva);
       expect(repository.create).toHaveBeenCalledWith(newBudgetDto);
-      expect(loggerSpy).toHaveBeenCalledWith(`Creando presupuesto para cliente: ${newBudgetDto.clientName}`);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        `Creando presupuesto para cliente: ${newBudgetDto.clientName}`,
+      );
     });
 
     it('should log "Sin cliente" if clientName is empty or missing (Happy Path)', async () => {
@@ -192,7 +232,9 @@ describe('BudgetApplicationService', () => {
       await service.create(newBudgetDto);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('Creando presupuesto para cliente: Sin cliente');
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Creando presupuesto para cliente: Sin cliente',
+      );
     });
   });
 
@@ -256,7 +298,9 @@ describe('BudgetApplicationService', () => {
       expect(result).toEqual(updatedBudget);
       expect(repository.findById).toHaveBeenCalledWith(budgetId);
       expect(repository.update).toHaveBeenCalledWith(budgetId, updateDto);
-      expect(loggerSpy).toHaveBeenCalledWith(`Actualizando presupuesto #${budgetId}`);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        `Actualizando presupuesto #${budgetId}`,
+      );
     });
 
     it('should throw a NotFoundException and NOT update if budget does not exist (Unhappy Path)', async () => {
@@ -312,7 +356,9 @@ describe('BudgetApplicationService', () => {
       // Assert
       expect(repository.findById).toHaveBeenCalledWith(budgetId);
       expect(repository.remove).toHaveBeenCalledWith(budgetId);
-      expect(loggerSpy).toHaveBeenCalledWith(`Presupuesto #${budgetId} eliminado`);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        `Presupuesto #${budgetId} eliminado`,
+      );
     });
 
     it('should throw a NotFoundException and NOT delete if budget does not exist (Unhappy Path)', async () => {

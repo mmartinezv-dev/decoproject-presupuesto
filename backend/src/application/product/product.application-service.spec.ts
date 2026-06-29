@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, Logger } from '@nestjs/common';
 import { ProductApplicationService } from './product.application-service';
@@ -21,7 +22,9 @@ describe('ProductApplicationService', () => {
 
   beforeEach(async () => {
     // Evitar que el logger ensucie la consola durante la ejecución de los tests
-    loggerSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    loggerSpy = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => {});
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -46,8 +49,22 @@ describe('ProductApplicationService', () => {
     it('should return all products from the repository (Happy Path)', async () => {
       // Arrange
       const expectedProducts: ProductEntity[] = [
-        { id: 1, name: 'Pintura Látex', description: 'Blanco 1 Galón', unit: 'gl', price: 25000, categoryId: 7 },
-        { id: 2, name: 'Cemento Melón', description: 'Saco 25kg', unit: 'un', price: 6500, categoryId: 3 },
+        {
+          id: 1,
+          name: 'Pintura Látex',
+          description: 'Blanco 1 Galón',
+          unit: 'gl',
+          price: 25000,
+          categoryId: 7,
+        },
+        {
+          id: 2,
+          name: 'Cemento Melón',
+          description: 'Saco 25kg',
+          unit: 'un',
+          price: 6500,
+          categoryId: 3,
+        },
       ];
       repository.findAll.mockResolvedValueOnce(expectedProducts);
 
@@ -65,7 +82,14 @@ describe('ProductApplicationService', () => {
       // Arrange
       const query = 'Pintura';
       const expectedProducts: ProductEntity[] = [
-        { id: 1, name: 'Pintura Látex', description: 'Blanco 1 Galón', unit: 'gl', price: 25000, categoryId: 7 },
+        {
+          id: 1,
+          name: 'Pintura Látex',
+          description: 'Blanco 1 Galón',
+          unit: 'gl',
+          price: 25000,
+          categoryId: 7,
+        },
       ];
       repository.search.mockResolvedValueOnce(expectedProducts);
 
@@ -139,7 +163,9 @@ describe('ProductApplicationService', () => {
       // Assert
       expect(result).toEqual(createdProduct);
       expect(repository.create).toHaveBeenCalledWith(newProductDto);
-      expect(loggerSpy).toHaveBeenCalledWith(`Creando producto: ${newProductDto.name}`);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        `Creando producto: ${newProductDto.name}`,
+      );
     });
   });
 
@@ -177,7 +203,9 @@ describe('ProductApplicationService', () => {
       expect(result).toEqual(updatedProduct);
       expect(repository.findById).toHaveBeenCalledWith(productId);
       expect(repository.update).toHaveBeenCalledWith(productId, updateDto);
-      expect(loggerSpy).toHaveBeenCalledWith(`Actualizando producto #${productId}`);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        `Actualizando producto #${productId}`,
+      );
     });
 
     it('should throw a NotFoundException and NOT update if product does not exist (Unhappy Path)', async () => {
@@ -220,7 +248,9 @@ describe('ProductApplicationService', () => {
       // Assert
       expect(repository.findById).toHaveBeenCalledWith(productId);
       expect(repository.remove).toHaveBeenCalledWith(productId);
-      expect(loggerSpy).toHaveBeenCalledWith(`Producto #${productId} eliminado`);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        `Producto #${productId} eliminado`,
+      );
     });
 
     it('should throw a NotFoundException and NOT delete if product does not exist (Unhappy Path)', async () => {

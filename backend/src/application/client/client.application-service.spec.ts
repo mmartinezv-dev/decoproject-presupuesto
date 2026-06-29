@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, Logger } from '@nestjs/common';
 import { ClientApplicationService } from './client.application-service';
@@ -20,7 +21,9 @@ describe('ClientApplicationService', () => {
 
   beforeEach(async () => {
     // Evitar que el logger ensucie la consola durante la ejecución de los tests
-    loggerSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    loggerSpy = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => {});
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -45,8 +48,20 @@ describe('ClientApplicationService', () => {
     it('should return all clients from the repository (Happy Path)', async () => {
       // Arrange
       const expectedClients: ClientEntity[] = [
-        { id: 1, name: 'Juan Pérez', rut: '12.345.678-9', address: 'Av. Siempre Viva 742', phone: '+56912345678' },
-        { id: 2, name: 'María Gómez', rut: '98.765.432-1', address: 'Las Condes 1234', phone: '+56987654321' },
+        {
+          id: 1,
+          name: 'Juan Pérez',
+          rut: '12.345.678-9',
+          address: 'Av. Siempre Viva 742',
+          phone: '+56912345678',
+        },
+        {
+          id: 2,
+          name: 'María Gómez',
+          rut: '98.765.432-1',
+          address: 'Las Condes 1234',
+          phone: '+56987654321',
+        },
       ];
       repository.findAll.mockResolvedValueOnce(expectedClients);
 
@@ -117,7 +132,9 @@ describe('ClientApplicationService', () => {
       // Assert
       expect(result).toEqual(createdClient);
       expect(repository.create).toHaveBeenCalledWith(newClientDto);
-      expect(loggerSpy).toHaveBeenCalledWith(`Creando cliente: ${newClientDto.name}`);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        `Creando cliente: ${newClientDto.name}`,
+      );
     });
   });
 
@@ -153,7 +170,9 @@ describe('ClientApplicationService', () => {
       expect(result).toEqual(updatedClient);
       expect(repository.findById).toHaveBeenCalledWith(clientId);
       expect(repository.update).toHaveBeenCalledWith(clientId, updateDto);
-      expect(loggerSpy).toHaveBeenCalledWith(`Actualizando cliente #${clientId}`);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        `Actualizando cliente #${clientId}`,
+      );
     });
 
     it('should throw a NotFoundException and NOT update if client does not exist (Unhappy Path)', async () => {
