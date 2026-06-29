@@ -5,11 +5,63 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
+  build-and-deploy:
+    name: Build & Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: './backend/package-lock.json'
+
+      - name: Build Backend
+        run: |
+          cd backend
+          npm ci
+          npm run build
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Package Release
+        run: |
+          tar -czf release.tar.gz \
+            backend/dist \
+            backend/package.json \
+            backend/package-lock.json \
+            backend/ecosystem.config.js \
+            backend/sync_schema.js \
+            frontend/dist \
+            aws
+
+      - name: Create Remote Temp Dir
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            mkdir -p /home/admin/app_new
+
+      - name: Upload to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "release.tar.gz"
+          target: "/home/admin/app_new"
+
+      - name: SSH Deploy & Swap
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -17,17 +69,37 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             export NVM_DIR="$HOME/.nvm"
-            source "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-            cd /home/admin/app
-            git pull origin main
+            echo "=== Desempaquetando la nueva versión ==="
+            cd /home/admin/app_new
+            tar -xzf release.tar.gz
+            rm release.tar.gz
 
-            cd backend
+            echo "=== Copiando ecosistema y configuraciones de producción ==="
+            if [ -f /home/admin/app/backend/ecosystem.config.js ]; then
+              cp /home/admin/app/backend/ecosystem.config.js /home/admin/app_new/backend/ecosystem.config.js
+            fi
+
+            echo "=== Instalando dependencias de producción en backend ==="
+            cd /home/admin/app_new/backend
             npm ci --omit=dev
-            npm run build
 
-            cd ../frontend
-            npm ci
-            npm run build
+            echo "=== Ejecutando inicialización de BD y Migraciones ==="
+            node sync_schema.js
+            eval $(node -e "const config = require('./ecosystem.config.js'); const env = config.apps[0].env; for (const [k, v] of Object.entries(env)) { console.log(\`export \${k}='\${v}'\`); }")
+            npm run migration:run
 
-            pm2 restart decoproject
+            echo "=== Realizando Swap de carpetas (Intercambio en caliente) ==="
+            if [ -d /home/admin/app_backup ]; then
+              rm -rf /home/admin/app_backup
+            fi
+            mv /home/admin/app /home/admin/app_backup
+            mv /home/admin/app_new /home/admin/app
+
+            echo "=== Recargando PM2 (Zero Downtime) ==="
+            cd /home/admin/app/backend
+            pm2 reload ecosystem.config.js --update-env
+            pm2 save
+            
+            echo "=== Despliegue completo con éxito ==="

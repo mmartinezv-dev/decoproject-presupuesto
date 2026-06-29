@@ -13,15 +13,15 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="print-section mb-6 bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-slate-200/60">
-    <h2 class="text-xs font-bold text-blue-700 uppercase tracking-widest mb-3">Datos del Cliente</h2>
+  <div class="print-section mb-6 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-5">
+    <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-4">Datos del Cliente</h2>
 
     <!-- Editable -->
     <div class="no-print grid grid-cols-1 md:grid-cols-4 gap-3">
       <div>
-        <label class="block text-xs font-medium text-slate-500 mb-1">Seleccionar</label>
+        <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">Seleccionar</label>
         <select
-          class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           @change="(e: Event) => {
             const id = +(e.target as HTMLSelectElement).value
             const c = clients.find(c => c.id === id)
@@ -33,28 +33,28 @@ defineEmits<{
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-500 mb-1">Nombre / Razón Social</label>
+        <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">Nombre / Razón Social</label>
         <input
           :value="client.name"
-          class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           placeholder="Nombre"
           @input="$emit('update:field', 'name', ($event.target as HTMLInputElement).value)"
         />
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-500 mb-1">RUT</label>
+        <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">RUT</label>
         <input
           :value="client.rut"
-          class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           placeholder="RUT"
           @input="$emit('update:field', 'rut', ($event.target as HTMLInputElement).value)"
         />
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-500 mb-1">Dirección</label>
+        <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">Dirección</label>
         <input
           :value="client.address"
-          class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           placeholder="Dirección"
           @input="$emit('update:field', 'address', ($event.target as HTMLInputElement).value)"
         />
@@ -62,11 +62,11 @@ defineEmits<{
     </div>
 
     <!-- Print -->
-    <div class="hidden print:grid print:grid-cols-2 print:gap-x-8 text-sm text-slate-700">
-      <p><span class="font-semibold text-slate-800">Cliente:</span> {{ client.name }}</p>
-      <p v-if="client.rut"><span class="font-semibold text-slate-800">RUT:</span> {{ client.rut }}</p>
-      <p v-if="client.address"><span class="font-semibold text-slate-800">Dirección:</span> {{ client.address }}</p>
-      <p v-if="client.phone"><span class="font-semibold text-slate-800">Teléfono:</span> {{ client.phone }}</p>
+    <div class="hidden print:grid print:grid-cols-2 print:gap-x-8 text-sm text-zinc-700">
+      <p><span class="font-semibold text-zinc-800">Cliente:</span> {{ client.name }}</p>
+      <p v-if="client.rut"><span class="font-semibold text-zinc-800">RUT:</span> {{ client.rut }}</p>
+      <p v-if="client.address"><span class="font-semibold text-zinc-800">Dirección:</span> {{ client.address }}</p>
+      <p v-if="client.phone"><span class="font-semibold text-zinc-800">Teléfono:</span> {{ client.phone }}</p>
     </div>
   </div>
 </template>

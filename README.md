@@ -8,12 +8,13 @@ Aplicación web para generar y gestionar presupuestos de construcción y decorac
 
 | Capa | Tecnología |
 |------|-----------|
-| Backend | NestJS 11 + TypeScript |
-| Base de datos | MySQL / MariaDB (TypeORM) |
-| Frontend | Vue 3 + Vite + Tailwind CSS 4 |
-| Auth | JWT (Bearer token) |
+| Backend | NestJS 11 + TypeScript — Clean Architecture / DDD |
+| Base de datos | MySQL 8 (TypeORM, migrations, soft deletes) |
+| Frontend | Vue 3 + Vite + Tailwind CSS 4 + TanStack Query + Pinia |
+| Auth | JWT Access Token (15 min) + Refresh Token rotatorio en HttpOnly cookie |
+| Contenedores | Docker multi-stage + docker-compose |
 | Servidor | AWS Lightsail + Nginx + PM2 |
-| CI/CD | GitHub Actions |
+| CI/CD | GitHub Actions (CI + Deploy) |
 
 ---
 
@@ -21,23 +22,50 @@ Aplicación web para generar y gestionar presupuestos de construcción y decorac
 
 ```
 presupuestos-constru/
-├── backend/          # API NestJS
+├── backend/
 │   ├── src/
-│   │   ├── auth/         # JWT guard, login
-│   │   ├── budgets/      # Presupuestos y sus items
-│   │   ├── categories/   # Categorías de productos
-│   │   ├── clients/      # Clientes
-│   │   ├── products/     # Catálogo de productos
-│   │   └── shared/       # Filtros e interceptores globales
-│   └── .env              # Variables de entorno (no commitear)
-├── frontend/         # App Vue 3
-│   └── src/
-│       ├── components/budget/  # Componentes del formulario de presupuesto
-│       ├── composables/        # useApi, useAuth, useBudget, useCrud
-│       ├── views/              # Vistas por ruta
-│       └── types/              # Interfaces TypeScript
-├── aws/              # Scripts de setup y deploy en Lightsail
-└── .github/workflows/deploy.yml
+│   │   ├── domain/               # Entidades y contratos de repositorio (puro TS)
+│   │   ├── application/          # Servicios de aplicación (casos de uso)
+│   │   ├── infrastructure/
+│   │   │   ├── auth/             # RefreshTokenStore (JTI en memoria)
+│   │   │   ├── config/           # TypeORM config + DataSource CLI
+│   │   │   └── database/
+│   │   │       ├── typeorm/
+│   │   │       │   ├── entities/ # ORM entities (con audit columns e índices)
+│   │   │       │   └── repositories/
+│   │   │       └── migrations/   # Migraciones TypeORM
+│   │   └── presentation/
+│   │       ├── http/
+│   │       │   ├── controllers/
+│   │       │   ├── guards/       # JwtAuthGuard
+│   │       │   ├── filters/
+│   │       │   ├── interceptors/
+│   │       │   └── decorators/   # @Public()
+│   │       └── modules/          # NestJS modules
+│   ├── Dockerfile
+│   └── .env                      # Variables de entorno (no commitear)
+├── frontend/
+│   ├── src/
+│   │   ├── core/
+│   │   │   ├── api/              # httpClient (fetch + silent refresh) + QueryClient
+│   │   │   └── auth/             # useAuthStore (Pinia, token en memoria)
+│   │   ├── features/
+│   │   │   └── budgets/
+│   │   │       ├── api/          # Funciones fetch tipadas
+│   │   │       ├── queries/      # useQuery hooks (TanStack Query)
+│   │   │       ├── mutations/    # useMutation hooks
+│   │   │       └── components/   # Skeleton loaders
+│   │   ├── shared/ui/            # SkeletonLoader
+│   │   ├── composables/          # useAuth (proxy Pinia), useApi (alias http)
+│   │   ├── components/           # Componentes del formulario de presupuesto
+│   │   ├── views/                # Vistas por ruta
+│   │   └── types/                # Interfaces TypeScript
+│   ├── docker/nginx.conf         # Nginx: static + proxy /api + history mode
+│   └── Dockerfile
+├── docker-compose.yml            # db + backend + frontend para dev/prod local
+└── .github/workflows/
+    ├── ci.yml                    # Lint + type-check + build
+    └── deploy.yml                # SSH deploy + migration:run + pm2 restart
 ```
 
 ---
@@ -46,17 +74,28 @@ presupuestos-constru/
 
 ### Requisitos
 
-- Node.js 22+
-- MySQL o MariaDB corriendo en `localhost:3306`
-- Docker Desktop (opcional, para levantar la DB)
+- Node.js 20+
+- Docker Desktop
 
-### 1. Levantar la base de datos con Docker
+### Opción A — Con docker-compose (recomendado)
+
+```bash
+# Levantar todo (db + backend + frontend)
+docker compose up --build
+```
+
+- Frontend: `http://localhost`
+- API: `http://localhost/api`
+
+### Opción B — Manual (desarrollo con hot-reload)
+
+#### 1. Base de datos
 
 ```bash
 docker start nicomix_db
 ```
 
-> Si es la primera vez, crear la base de datos:
+> Primera vez: crear la base de datos
 > ```bash
 > docker exec nicomix_db mariadb -uroot -proot_password -e "
 >   CREATE DATABASE IF NOT EXISTS decoproject CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -65,17 +104,18 @@ docker start nicomix_db
 >   FLUSH PRIVILEGES;"
 > ```
 
-### 2. Backend
+#### 2. Backend
 
 ```bash
 cd backend
 npm install
+npm run migration:run   # aplicar migraciones pendientes
 npm run start:dev
 ```
 
 API disponible en `http://localhost:3000/api`
 
-### 3. Frontend
+#### 3. Frontend
 
 ```bash
 cd frontend
@@ -91,7 +131,7 @@ App disponible en `http://localhost:5173`
 
 ## Variables de entorno
 
-Crear `backend/.env` con:
+Crear `backend/.env`:
 
 ```env
 DB_HOST=localhost
@@ -102,8 +142,14 @@ DB_NAME=decoproject
 
 AUTH_USER=admin
 AUTH_PASS=decoproject2024
-JWT_SECRET=decoproject-secret-key
+
+JWT_ACCESS_SECRET=decoproject-access-secret-key
+JWT_REFRESH_SECRET=decoproject-refresh-secret-key
+JWT_ACCESS_EXPIRES=900
+JWT_REFRESH_EXPIRES=604800
 ```
+
+> En producción reemplazar los valores de los secrets por strings largos y aleatorios.
 
 ---
 
@@ -116,13 +162,35 @@ JWT_SECRET=decoproject-secret-key
 
 ---
 
+## Migraciones de base de datos
+
+```bash
+cd backend
+
+# Aplicar migraciones pendientes
+npm run migration:run
+
+# Revertir la última migración
+npm run migration:revert
+
+# Ver estado de migraciones
+npm run migration:show
+
+# Generar nueva migración (tras cambios en entities)
+npm run migration:generate -- src/infrastructure/database/migrations/NombreMigracion
+```
+
+---
+
 ## API Endpoints
 
-Todos los endpoints requieren `Authorization: Bearer <token>` excepto login.
+Los endpoints marcados con `*` no requieren autenticación.
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/auth/login` | Login, retorna JWT |
+| POST* | `/api/auth/login` | Login — retorna `{ accessToken }` + cookie HttpOnly |
+| POST* | `/api/auth/refresh` | Rota el refresh token — retorna nuevo `{ accessToken }` |
+| POST | `/api/auth/logout` | Revoca el refresh token y limpia la cookie |
 | GET | `/api/budgets` | Listar presupuestos |
 | GET | `/api/budgets/:id` | Obtener presupuesto |
 | POST | `/api/budgets` | Crear presupuesto |
@@ -141,6 +209,25 @@ Todos los endpoints requieren `Authorization: Bearer <token>` excepto login.
 | PUT | `/api/clients/:id` | Actualizar cliente |
 | DELETE | `/api/clients/:id` | Eliminar cliente |
 
+### Flujo de autenticación
+
+```
+POST /auth/login
+  → body: { username, password }
+  → response: { accessToken }   (15 min)
+  → cookie: refresh_token       (7 días, HttpOnly, path=/api/auth)
+
+POST /auth/refresh               (automático cuando el accessToken expira)
+  → cookie: refresh_token        (enviada automáticamente por el browser)
+  → response: { accessToken }   (nuevo, 15 min)
+  → cookie: refresh_token        (rotado)
+
+POST /auth/logout
+  → Authorization: Bearer <accessToken>
+  → revoca el JTI del refresh token
+  → limpia la cookie
+```
+
 ---
 
 ## Funcionalidades
@@ -149,10 +236,12 @@ Todos los endpoints requieren `Authorization: Bearer <token>` excepto login.
 - **Cálculo automático**: neto, IVA (19%) y total en tiempo real
 - **Visita técnica**: registro de hallazgos con imágenes y resumen
 - **Obras preliminares**: lista de trabajos previos
-- **Imágenes**: adjuntar fotos al presupuesto (almacenadas en base de datos)
+- **Imágenes**: adjuntar fotos al presupuesto
 - **Logo**: logo de empresa personalizable por presupuesto
 - **Clientes**: búsqueda y autocompletado desde el catálogo
 - **Productos**: catálogo con categorías, precio y unidad de medida
+- **Skeleton loaders**: estados de carga con animación
+- **Code splitting**: chunks separados por dominio (budgets, catalog, clients)
 
 ---
 
@@ -160,11 +249,12 @@ Todos los endpoints requieren `Authorization: Bearer <token>` excepto login.
 
 El deploy se ejecuta automáticamente al hacer push a `main` vía GitHub Actions:
 
-1. SSH al servidor Lightsail
-2. `git pull origin main`
-3. Build del backend (`npm run build`)
-4. Build del frontend (`npm run build`)
-5. Reinicio con PM2 (`pm2 restart decoproject`)
+1. CI valida lint + build de backend y frontend
+2. SSH al servidor Lightsail
+3. `git pull origin main`
+4. Build del backend + `migration:run`
+5. Build del frontend
+6. Reinicio con PM2
 
 ### Setup inicial del servidor
 
@@ -174,7 +264,7 @@ bash aws/setup.sh
 
 ### Variables de entorno en producción
 
-Crear `/home/admin/app/backend/.env` en el servidor con los valores de producción.
+Crear `/home/admin/app/backend/.env` en el servidor con los valores de producción (secrets reales, `NODE_ENV=production`).
 
 ---
 

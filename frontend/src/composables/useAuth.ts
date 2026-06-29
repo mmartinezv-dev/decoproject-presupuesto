@@ -1,24 +1,11 @@
-import { ref, computed } from 'vue'
-
-const TOKEN_KEY = 'auth_token'
-const token = ref<string | null>(localStorage.getItem(TOKEN_KEY))
+import { useAuthStore } from '../core/auth/useAuthStore'
 
 export function useAuth() {
-  const isLoggedIn = computed(() => !!token.value)
-
-  function setToken(t: string) {
-    token.value = t
-    localStorage.setItem(TOKEN_KEY, t)
+  const store = useAuthStore()
+  return {
+    isLoggedIn: store.isLoggedIn,
+    setToken: (t: string) => store.setToken(t),
+    logout: () => store.logout(),
+    getToken: () => store.getToken(),
   }
-
-  function logout() {
-    token.value = null
-    localStorage.removeItem(TOKEN_KEY)
-  }
-
-  function getToken(): string | null {
-    return token.value
-  }
-
-  return { isLoggedIn, setToken, logout, getToken }
 }

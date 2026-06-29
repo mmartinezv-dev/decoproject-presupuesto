@@ -118,9 +118,9 @@ onMounted(async () => {
 <template>
   <!-- Skeleton inicial mientras cargan clientes / presupuesto existente -->
   <div v-if="loading" class="mx-auto max-w-[210mm] space-y-4 p-8">
-    <SkeletonLoader height="h-24" :rounded="true" />
-    <SkeletonLoader height="h-16" :rounded="true" />
-    <SkeletonLoader height="h-64" :rounded="true" />
+    <SkeletonLoader height="h-24" />
+    <SkeletonLoader height="h-16" />
+    <SkeletonLoader height="h-64" />
   </div>
 
   <div v-else class="relative print:p-0" :class="{ 'pdf-exporting': exportingPdf }">

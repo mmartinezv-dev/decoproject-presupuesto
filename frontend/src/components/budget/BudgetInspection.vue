@@ -23,69 +23,68 @@ const emit = defineEmits<{
   <div class="space-y-8">
 
     <!-- ── Informe de Visita ── -->
-    <div>
-      <h2 class="text-xs font-bold text-blue-700 uppercase tracking-widest mb-4">Informe de Visita</h2>
+    <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-5">
+      <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-4">Informe de Visita</h2>
 
       <!-- Resumen -->
       <div class="mb-6">
-        <p class="text-sm font-semibold text-slate-600 mb-2">Resumen</p>
+        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Resumen</p>
         <textarea
           :value="summary"
           rows="4"
-          class="no-print w-full border border-slate-200 rounded px-3 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none resize-none"
+          class="no-print w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none resize-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           placeholder="Resumen general de la visita..."
           @input="emit('update:summary', ($event.target as HTMLTextAreaElement).value)"
         />
-        <p v-if="summary" class="hidden print:block text-sm text-slate-700 whitespace-pre-line">{{ summary }}</p>
+        <p v-if="summary" class="hidden print:block text-sm text-zinc-700 whitespace-pre-line">{{ summary }}</p>
       </div>
 
       <!-- Hallazgos -->
       <div>
-        <p class="text-sm font-semibold text-slate-600 mb-3">Hallazgos</p>
+        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">Hallazgos</p>
 
-        <div class="space-y-4">
+        <div class="space-y-3">
           <div
             v-for="(f, i) in findings"
             :key="i"
-            class="border border-slate-200 rounded-lg p-3"
+            class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50/50 dark:bg-zinc-800/50"
           >
             <!-- Texto del hallazgo -->
             <div class="flex gap-2 items-start mb-3 no-print">
-              <span class="text-slate-400 text-sm w-5 shrink-0 mt-1.5">{{ i + 1 }}.</span>
+              <span class="text-zinc-400 text-sm w-5 shrink-0 mt-2.5 font-medium">{{ i + 1 }}.</span>
               <input
                 :value="f.text"
-                class="flex-1 border border-slate-200 rounded px-3 py-1.5 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"
+                class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                 placeholder="Describir hallazgo..."
                 @input="emit('updateFinding', i, ($event.target as HTMLInputElement).value)"
               />
               <button
                 v-if="findings.length > 1"
-                class="text-slate-300 hover:text-red-400 transition-colors text-lg leading-none shrink-0 mt-1"
+                class="mt-1.5 rounded-md p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0"
                 @click="emit('removeFinding', i)"
               >
-                &times;
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
 
             <!-- Texto solo impresión -->
             <div class="hidden print:flex gap-2 items-start mb-2">
-              <span class="text-slate-400 text-sm shrink-0">{{ i + 1 }}.</span>
-              <span class="text-sm text-slate-700">{{ f.text }}</span>
+              <span class="text-zinc-400 text-sm shrink-0">{{ i + 1 }}.</span>
+              <span class="text-sm text-zinc-700">{{ f.text }}</span>
             </div>
 
             <!-- Imágenes del hallazgo -->
             <div :class="f.images.length ? 'mt-2' : ''">
-              <!-- Thumbnails -->
-              <div v-if="f.images.length" class="grid grid-cols-3 gap-2 mb-2">
+              <div v-if="f.images.length" class="grid grid-cols-3 gap-2 mb-3">
                 <div v-for="(img, j) in f.images" :key="j" class="relative group flex flex-col gap-1">
                   <div class="relative">
                     <img
                       :src="img.src"
                       :alt="img.caption || `Imagen ${j + 1}`"
-                      class="w-full h-28 object-cover rounded border border-slate-200"
+                      class="w-full h-28 object-cover rounded-lg border border-zinc-200 dark:border-zinc-700"
                     />
                     <button
-                      class="no-print absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      class="no-print absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                       @click="emit('removeFindingImage', i, j)"
                     >
                       ✕
@@ -93,16 +92,15 @@ const emit = defineEmits<{
                   </div>
                   <input
                     :value="img.caption"
-                    class="no-print w-full text-xs border border-slate-200 rounded px-1.5 py-1 text-slate-600 placeholder-slate-300 focus:border-blue-400 focus:outline-none"
+                    class="no-print w-full rounded border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-600 placeholder-zinc-300 focus:border-brand-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                     placeholder="Descripción..."
                     @input="emit('updateFindingImageCaption', i, j, ($event.target as HTMLInputElement).value)"
                   />
-                  <p v-if="img.caption" class="hidden print:block text-xs text-slate-500 text-center italic">{{ img.caption }}</p>
+                  <p v-if="img.caption" class="hidden print:block text-xs text-zinc-500 text-center italic">{{ img.caption }}</p>
                 </div>
               </div>
 
-              <!-- Botón subir imágenes -->
-              <label class="no-print inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 cursor-pointer transition-colors border border-dashed border-blue-300 hover:border-blue-500 rounded px-2 py-1">
+              <label class="no-print inline-flex items-center gap-1.5 text-xs text-brand-700 dark:text-brand-400 hover:text-brand-900 cursor-pointer transition-colors border border-dashed border-brand-300 dark:border-brand-700 hover:border-brand-500 rounded-lg px-3 py-1.5">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4-4 4 4 4-6 4 6M4 20h16M8 8a2 2 0 100-4 2 2 0 000 4z" />
                 </svg>
@@ -114,7 +112,7 @@ const emit = defineEmits<{
         </div>
 
         <button
-          class="no-print mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+          class="no-print mt-3 text-sm text-brand-700 dark:text-brand-400 hover:text-brand-900 font-medium transition-colors"
           @click="emit('addFinding')"
         >
           + Agregar hallazgo
@@ -122,33 +120,30 @@ const emit = defineEmits<{
       </div>
     </div>
 
-    <!-- Separador -->
-    <hr class="border-slate-200" />
-
     <!-- ── Obras Preliminares ── -->
-    <div>
-      <h2 class="text-xs font-bold text-blue-700 uppercase tracking-widest mb-4">Obras Preliminares</h2>
-      <p class="text-sm text-slate-500 mb-3 no-print">Puntos a abordar en la intervención</p>
+    <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-5">
+      <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-4">Obras Preliminares</h2>
+      <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3 no-print">Puntos a abordar en la intervención</p>
 
       <div class="no-print space-y-2">
         <div v-for="(w, i) in works" :key="i" class="flex gap-2 items-center">
-          <span class="text-blue-400 font-bold text-sm shrink-0">▸</span>
+          <span class="text-brand-500 font-bold text-sm shrink-0">▸</span>
           <input
             :value="w"
-            class="flex-1 border border-slate-200 rounded px-3 py-1.5 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"
+            class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             placeholder="Describir punto a abordar..."
             @input="emit('updateWork', i, ($event.target as HTMLInputElement).value)"
           />
           <button
             v-if="works.length > 1"
-            class="text-slate-300 hover:text-red-400 transition-colors text-lg leading-none shrink-0"
+            class="rounded-md p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0"
             @click="emit('removeWork', i)"
           >
-            &times;
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
         <button
-          class="mt-1 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+          class="mt-1 text-sm text-brand-700 dark:text-brand-400 hover:text-brand-900 font-medium transition-colors"
           @click="emit('addWork')"
         >
           + Agregar punto
@@ -156,8 +151,8 @@ const emit = defineEmits<{
       </div>
 
       <ul class="hidden print:block space-y-1.5 pl-0 list-none">
-        <li v-for="(w, i) in works.filter(Boolean)" :key="i" class="text-sm text-slate-700 flex gap-2">
-          <span class="text-blue-500 font-bold shrink-0">▸</span>
+        <li v-for="(w, i) in works.filter(Boolean)" :key="i" class="text-sm text-zinc-700 flex gap-2">
+          <span class="text-brand-600 font-bold shrink-0">▸</span>
           <span>{{ w }}</span>
         </li>
       </ul>

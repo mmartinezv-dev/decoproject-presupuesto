@@ -11,7 +11,7 @@ import BudgetListSkeleton from '../features/budgets/components/BudgetListSkeleto
 
 const { clp } = useFormat()
 
-const { data: budgets, isLoading, isError, error, refetch } = useBudgetsList()
+const { data: budgets, isLoading, isError, refetch } = useBudgetsList()
 const { mutate: deleteBudget, isPending: isDeleting } = useDeleteBudget()
 
 const confirmingId = ref<number | null>(null)

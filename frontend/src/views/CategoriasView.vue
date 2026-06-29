@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
+import { vAutoAnimate } from '@formkit/auto-animate/vue'
+import { Plus, Pencil, Trash2, Tag } from '@lucide/vue'
 import { useCrud } from '../composables/useCrud'
+import FormField from '../shared/ui/FormField.vue'
+import SkeletonLoader from '../shared/ui/SkeletonLoader.vue'
 import type { Category } from '../types'
 
 const { items, form, editing, load, save, edit, remove, reset } = useCrud<Category>(
@@ -8,49 +12,127 @@ const { items, form, editing, load, save, edit, remove, reset } = useCrud<Catego
   () => ({ name: '', sortOrder: 0 }),
 )
 
-onMounted(load)
+const loading      = ref(true)
+const confirmingId = ref<number | null>(null)
+
+onMounted(async () => { await load(); loading.value = false })
+
+async function handleRemove(id: number) {
+  confirmingId.value = null
+  await remove(id)
+}
 </script>
 
 <template>
-  <h1 class="text-2xl font-bold mb-4">Categorías</h1>
-
-  <form class="bg-white rounded shadow p-4 mb-6 grid grid-cols-1 md:grid-cols-4 gap-3 items-end" @submit.prevent="save">
-    <div class="md:col-span-2">
-      <label class="block text-sm font-medium text-gray-600">Nombre</label>
-      <input v-model="form.name" required class="w-full border rounded px-2 py-1" placeholder="Ej: Costos Indirectos" />
-    </div>
+  <div class="mx-auto max-w-3xl space-y-6 p-6">
+    <!-- Header -->
     <div>
-      <label class="block text-sm font-medium text-gray-600">Orden</label>
-      <input v-model.number="form.sortOrder" type="number" min="0" class="w-full border rounded px-2 py-1" />
+      <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Categorías</h1>
+      <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Agrupá tus productos por tipo de trabajo</p>
     </div>
-    <div class="flex gap-2">
-      <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">
-        {{ editing ? 'Actualizar' : 'Agregar' }}
-      </button>
-      <button v-if="editing" type="button" class="bg-gray-300 px-4 py-1 rounded" @click="reset">Cancelar</button>
-    </div>
-  </form>
 
-  <table class="w-full bg-white rounded shadow text-sm">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="text-left p-2">Nombre</th>
-        <th class="text-center p-2 w-24">Orden</th>
-        <th class="p-2 w-24"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="c in items" :key="c.id" class="border-t hover:bg-gray-50">
-        <td class="p-2">{{ c.name }}</td>
-        <td class="p-2 text-center text-gray-500">{{ c.sortOrder }}</td>
-        <td class="p-2 flex gap-1 justify-center">
-          <button class="text-blue-600 hover:underline text-xs" @click="edit(c)">Editar</button>
-          <button class="text-red-600 hover:underline text-xs" @click="remove(c.id!)">Eliminar</button>
-        </td>
-      </tr>
-      <tr v-if="!items.length">
-        <td colspan="3" class="p-4 text-center text-gray-400">Sin categorías registradas</td>
-      </tr>
-    </tbody>
-  </table>
+    <!-- Form -->
+    <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+      <h2 class="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        {{ editing ? 'Editar categoría' : 'Nueva categoría' }}
+      </h2>
+      <form class="flex flex-wrap items-end gap-3" @submit.prevent="save">
+        <div class="min-w-[200px] flex-1">
+          <FormField label="Nombre" required>
+            <input
+              v-model="form.name"
+              required
+              placeholder="Ej: Costos Indirectos"
+              class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+            />
+          </FormField>
+        </div>
+        <div class="w-28">
+          <FormField label="Orden">
+            <input
+              v-model.number="form.sortOrder"
+              type="number"
+              min="0"
+              class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            />
+          </FormField>
+        </div>
+        <div class="flex gap-2 pb-0.5">
+          <button
+            type="submit"
+            class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-700"
+          >
+            <Plus v-if="!editing" class="h-4 w-4" />
+            {{ editing ? 'Actualizar' : 'Agregar' }}
+          </button>
+          <button
+            v-if="editing"
+            type="button"
+            class="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+            @click="reset"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+      <!-- Skeleton -->
+      <div v-if="loading" class="divide-y divide-zinc-100 dark:divide-zinc-800">
+        <div v-for="i in 4" :key="i" class="flex items-center gap-4 px-4 py-3.5">
+          <SkeletonLoader height="h-4" width="w-40" />
+          <SkeletonLoader height="h-4" width="w-10" class="ml-auto" />
+          <SkeletonLoader height="h-6" width="w-16" />
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div v-else-if="!items.length" class="flex flex-col items-center justify-center gap-2 py-12">
+        <Tag class="h-8 w-8 text-zinc-300 dark:text-zinc-600" />
+        <p class="text-sm text-zinc-400 dark:text-zinc-500">Sin categorías registradas</p>
+      </div>
+
+      <!-- Data -->
+      <table v-else class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-800/50">
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Nombre</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500 w-20">Orden</th>
+            <th class="px-4 py-3 w-24"></th>
+          </tr>
+        </thead>
+        <tbody v-auto-animate>
+          <tr
+            v-for="c in items"
+            :key="c.id"
+            class="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/30"
+          >
+            <td class="px-4 py-3.5 font-medium text-zinc-800 dark:text-zinc-200">{{ c.name }}</td>
+            <td class="px-4 py-3.5 text-center text-zinc-500 dark:text-zinc-400 tabular-nums">{{ c.sortOrder }}</td>
+            <td class="px-4 py-3.5">
+              <div class="flex items-center justify-end gap-1">
+                <template v-if="confirmingId === c.id">
+                  <span class="mr-1 text-xs text-zinc-500">¿Eliminar?</span>
+                  <button class="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10" @click="handleRemove(c.id!)">Sí</button>
+                  <button class="rounded px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800" @click="confirmingId = null">No</button>
+                </template>
+                <template v-else>
+                  <button
+                    class="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                    @click="edit(c)"
+                  ><Pencil class="h-4 w-4" /></button>
+                  <button
+                    class="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                    @click="confirmingId = c.id!"
+                  ><Trash2 class="h-4 w-4" /></button>
+                </template>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </template>

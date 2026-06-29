@@ -28,7 +28,7 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       request.user = this.jwtService.verify(token, {
-        secret: process.env.JWT_SECRET ?? 'decoproject-secret-key',
+        secret: process.env.JWT_ACCESS_SECRET ?? 'access-secret',
       });
     } catch {
       throw new UnauthorizedException();
