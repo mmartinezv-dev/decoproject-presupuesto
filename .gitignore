@@ -16,7 +16,6 @@ skills-lock.json
 
 # AWS / SSH keys
 *.pem
-aws/
 
 # Release artifacts
 release/

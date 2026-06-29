@@ -34,6 +34,7 @@ jobs:
 
       - name: Package Release
         run: |
+          touch backend/ecosystem.config.js
           tar -czf release.tar.gz \
             backend/dist \
             backend/package.json \
