@@ -8,6 +8,7 @@ backend/public/
 
 # Claude Code internals
 .agents/
+.claude/
 skills-lock.json
 
 # Database
