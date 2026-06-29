@@ -13,7 +13,7 @@ export class ProductTypeOrmRepository implements IProductRepository {
   ) {}
 
   findAll(): Promise<ProductEntity[]> {
-    return this.repo.find({ order: { name: 'ASC' } }) as Promise<ProductEntity[]>;
+    return this.repo.find({ order: { name: 'ASC' } });
   }
 
   search(query: string): Promise<ProductEntity[]> {
@@ -21,21 +21,24 @@ export class ProductTypeOrmRepository implements IProductRepository {
       where: { name: Like(`%${query}%`) },
       take: 20,
       order: { name: 'ASC' },
-    }) as Promise<ProductEntity[]>;
+    });
   }
 
   findById(id: number): Promise<ProductEntity | null> {
-    return this.repo.findOneBy({ id }) as Promise<ProductEntity | null>;
+    return this.repo.findOneBy({ id });
   }
 
   create(data: Partial<ProductEntity>): Promise<ProductEntity> {
-    return this.repo.save(this.repo.create(data as Partial<ProductOrmEntity>)) as Promise<ProductEntity>;
+    return this.repo.save(this.repo.create(data as Partial<ProductOrmEntity>));
   }
 
-  async update(id: number, data: Partial<ProductEntity>): Promise<ProductEntity> {
+  async update(
+    id: number,
+    data: Partial<ProductEntity>,
+  ): Promise<ProductEntity> {
     const product = await this.repo.findOneBy({ id });
     Object.assign(product!, data);
-    return this.repo.save(product!) as unknown as Promise<ProductEntity>;
+    return this.repo.save(product!);
   }
 
   async remove(id: number): Promise<void> {

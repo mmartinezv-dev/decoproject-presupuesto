@@ -40,7 +40,10 @@ async function bootstrap() {
     .setDescription('API de presupuestos para construcción y decoración')
     .setVersion('1.0')
     .addCookieAuth('refresh_token')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'access-token')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'access-token',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);

@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsNumber, IsArray, ValidateNested, Min } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  ValidateNested,
+  Min,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CreateBudgetItemDto } from './create-budget-item.dto';
 
@@ -46,7 +53,10 @@ export class CreateBudgetDto {
 
   @IsArray()
   @IsOptional()
-  visitFindings?: { text: string; images: { src: string; caption: string }[] }[];
+  visitFindings?: {
+    text: string;
+    images: { src: string; caption: string }[];
+  }[];
 
   @IsString()
   @IsOptional()

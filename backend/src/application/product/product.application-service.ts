@@ -33,7 +33,10 @@ export class ProductApplicationService {
     return this.productRepository.create(dto);
   }
 
-  async update(id: number, dto: Partial<ProductEntity>): Promise<ProductEntity> {
+  async update(
+    id: number,
+    dto: Partial<ProductEntity>,
+  ): Promise<ProductEntity> {
     await this.findOne(id);
     this.logger.log(`Actualizando producto #${id}`);
     return this.productRepository.update(id, dto);

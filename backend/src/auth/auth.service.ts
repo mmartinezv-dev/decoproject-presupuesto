@@ -15,7 +15,10 @@ export class AuthService {
 
     const token = this.jwtService.sign(
       { sub: username },
-      { secret: process.env.JWT_SECRET ?? 'decoproject-secret-key', expiresIn: '7d' },
+      {
+        secret: process.env.JWT_SECRET ?? 'decoproject-secret-key',
+        expiresIn: '7d',
+      },
     );
     return { token };
   }

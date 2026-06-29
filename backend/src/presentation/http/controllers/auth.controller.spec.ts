@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
@@ -15,7 +16,9 @@ function mockResponse() {
 }
 
 function mockRequest(cookie?: string) {
-  return { cookies: cookie ? { refresh_token: cookie } : {} } as unknown as Request;
+  return {
+    cookies: cookie ? { refresh_token: cookie } : {},
+  } as unknown as Request;
 }
 
 describe('AuthController', () => {
@@ -24,7 +27,9 @@ describe('AuthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthApplicationService, useValue: mockAuthService }],
+      providers: [
+        { provide: AuthApplicationService, useValue: mockAuthService },
+      ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -38,15 +43,24 @@ describe('AuthController', () => {
         refreshToken: 'refresh.token',
       });
       const res = mockResponse();
-      const result = await controller.login({ username: 'admin', password: 'admin123' }, res);
-      expect(res.cookie).toHaveBeenCalledWith('refresh_token', 'refresh.token', expect.any(Object));
+      const result = await controller.login(
+        { username: 'admin', password: 'admin123' },
+        res,
+      );
+      expect(res.cookie).toHaveBeenCalledWith(
+        'refresh_token',
+        'refresh.token',
+        expect.any(Object),
+      );
       expect(result).toEqual({ accessToken: 'access.token' });
     });
   });
 
   describe('refresh', () => {
     it('should throw if no cookie', async () => {
-      await expect(controller.refresh(mockRequest(), mockResponse())).rejects.toThrow(UnauthorizedException);
+      await expect(
+        controller.refresh(mockRequest(), mockResponse()),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should rotate cookie and return new accessToken', async () => {
@@ -56,7 +70,11 @@ describe('AuthController', () => {
       });
       const res = mockResponse();
       const result = await controller.refresh(mockRequest('old.refresh'), res);
-      expect(res.cookie).toHaveBeenCalledWith('refresh_token', 'new.refresh', expect.any(Object));
+      expect(res.cookie).toHaveBeenCalledWith(
+        'refresh_token',
+        'new.refresh',
+        expect.any(Object),
+      );
       expect(result).toEqual({ accessToken: 'new.access' });
     });
   });
@@ -66,7 +84,10 @@ describe('AuthController', () => {
       mockAuthService.logout.mockResolvedValueOnce(undefined);
       const res = mockResponse();
       const result = await controller.logout(mockRequest('some.token'), res);
-      expect(res.clearCookie).toHaveBeenCalledWith('refresh_token', expect.any(Object));
+      expect(res.clearCookie).toHaveBeenCalledWith(
+        'refresh_token',
+        expect.any(Object),
+      );
       expect(result).toEqual({ ok: true });
     });
   });

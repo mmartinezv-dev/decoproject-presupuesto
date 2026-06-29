@@ -1,4 +1,10 @@
-import { Injectable, Inject, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { CATEGORY_REPOSITORY } from '../../domain/category/repositories/category.repository.interface';
 import type { ICategoryRepository } from '../../domain/category/repositories/category.repository.interface';
 import type { CategoryEntity } from '../../domain/category/entities/category.entity';
@@ -46,7 +52,10 @@ export class CategoryApplicationService implements OnModuleInit {
     return this.categoryRepository.create(dto);
   }
 
-  async update(id: number, dto: Partial<CategoryEntity>): Promise<CategoryEntity> {
+  async update(
+    id: number,
+    dto: Partial<CategoryEntity>,
+  ): Promise<CategoryEntity> {
     await this.findOne(id);
     return this.categoryRepository.update(id, dto);
   }

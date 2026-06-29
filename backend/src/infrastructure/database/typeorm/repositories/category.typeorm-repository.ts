@@ -17,26 +17,31 @@ export class CategoryTypeOrmRepository implements ICategoryRepository {
   }
 
   async saveMany(data: Partial<CategoryEntity>[]): Promise<CategoryEntity[]> {
-    const entities = data.map((c) => this.repo.create(c as Partial<CategoryOrmEntity>));
-    return this.repo.save(entities) as Promise<CategoryEntity[]>;
+    const entities = data.map((c) =>
+      this.repo.create(c as Partial<CategoryOrmEntity>),
+    );
+    return this.repo.save(entities);
   }
 
   findAll(): Promise<CategoryEntity[]> {
-    return this.repo.find({ order: { sortOrder: 'ASC' } }) as Promise<CategoryEntity[]>;
+    return this.repo.find({ order: { sortOrder: 'ASC' } });
   }
 
   findById(id: number): Promise<CategoryEntity | null> {
-    return this.repo.findOneBy({ id }) as Promise<CategoryEntity | null>;
+    return this.repo.findOneBy({ id });
   }
 
   create(data: Partial<CategoryEntity>): Promise<CategoryEntity> {
-    return this.repo.save(this.repo.create(data as Partial<CategoryOrmEntity>)) as Promise<CategoryEntity>;
+    return this.repo.save(this.repo.create(data as Partial<CategoryOrmEntity>));
   }
 
-  async update(id: number, data: Partial<CategoryEntity>): Promise<CategoryEntity> {
+  async update(
+    id: number,
+    data: Partial<CategoryEntity>,
+  ): Promise<CategoryEntity> {
     const cat = await this.repo.findOneBy({ id });
     Object.assign(cat!, data);
-    return this.repo.save(cat!) as unknown as Promise<CategoryEntity>;
+    return this.repo.save(cat!);
   }
 
   async remove(id: number): Promise<void> {

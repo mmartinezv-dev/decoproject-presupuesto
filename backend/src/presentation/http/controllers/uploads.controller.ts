@@ -26,7 +26,10 @@ export class UploadsController {
       }),
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
-          return cb(new BadRequestException('Solo se permiten imágenes'), false);
+          return cb(
+            new BadRequestException('Solo se permiten imágenes'),
+            false,
+          );
         }
         cb(null, true);
       },

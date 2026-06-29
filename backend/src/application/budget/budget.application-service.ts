@@ -28,7 +28,9 @@ export class BudgetApplicationService {
   }
 
   create(dto: Partial<BudgetEntity>): Promise<BudgetEntity> {
-    this.logger.log(`Creando presupuesto para cliente: ${dto.clientName || 'Sin cliente'}`);
+    this.logger.log(
+      `Creando presupuesto para cliente: ${dto.clientName || 'Sin cliente'}`,
+    );
     return this.budgetRepository.create(dto);
   }
 

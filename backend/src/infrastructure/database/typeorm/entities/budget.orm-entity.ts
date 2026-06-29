@@ -1,6 +1,12 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, OneToMany,
-  CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { BudgetItemOrmEntity } from './budget-item.orm-entity';
 
@@ -74,6 +80,9 @@ export class BudgetOrmEntity {
   @Column('decimal', { precision: 14, scale: 2, default: 0 })
   total: number;
 
-  @OneToMany(() => BudgetItemOrmEntity, (item) => item.budget, { cascade: true, eager: true })
+  @OneToMany(() => BudgetItemOrmEntity, (item) => item.budget, {
+    cascade: true,
+    eager: true,
+  })
   items: BudgetItemOrmEntity[];
 }

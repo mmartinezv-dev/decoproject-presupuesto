@@ -6,7 +6,9 @@ export class AddAuditColumnsAndIndexes1750000000000 implements MigrationInterfac
   public async up(queryRunner: QueryRunner): Promise<void> {
     // ── budget: updatedAt ─────────────────────────────────────────────────────
     const budgetTable = await queryRunner.getTable('budget');
-    const hasUpdatedAt = budgetTable?.columns.some((c) => c.name === 'updatedAt');
+    const hasUpdatedAt = budgetTable?.columns.some(
+      (c) => c.name === 'updatedAt',
+    );
     if (!hasUpdatedAt) {
       await queryRunner.query(`
         ALTER TABLE \`budget\`
@@ -17,7 +19,9 @@ export class AddAuditColumnsAndIndexes1750000000000 implements MigrationInterfac
     }
 
     // ── budget: deletedAt ─────────────────────────────────────────────────────
-    const hasDeletedAt = budgetTable?.columns.some((c) => c.name === 'deletedAt');
+    const hasDeletedAt = budgetTable?.columns.some(
+      (c) => c.name === 'deletedAt',
+    );
     if (!hasDeletedAt) {
       await queryRunner.query(`
         ALTER TABLE \`budget\`
@@ -71,9 +75,15 @@ export class AddAuditColumnsAndIndexes1750000000000 implements MigrationInterfac
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP INDEX \`IDX_client_rut\` ON \`client\``);
-    await queryRunner.query(`DROP INDEX \`IDX_product_categoryId\` ON \`product\``);
-    await queryRunner.query(`DROP INDEX \`IDX_budget_createdAt\` ON \`budget\``);
-    await queryRunner.query(`DROP INDEX \`IDX_budget_clientRut\` ON \`budget\``);
+    await queryRunner.query(
+      `DROP INDEX \`IDX_product_categoryId\` ON \`product\``,
+    );
+    await queryRunner.query(
+      `DROP INDEX \`IDX_budget_createdAt\` ON \`budget\``,
+    );
+    await queryRunner.query(
+      `DROP INDEX \`IDX_budget_clientRut\` ON \`budget\``,
+    );
     await queryRunner.query(`ALTER TABLE \`budget\` DROP COLUMN \`deletedAt\``);
     await queryRunner.query(`ALTER TABLE \`budget\` DROP COLUMN \`updatedAt\``);
   }

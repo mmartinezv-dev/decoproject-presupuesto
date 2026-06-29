@@ -13,21 +13,21 @@ export class ClientTypeOrmRepository implements IClientRepository {
   ) {}
 
   findAll(): Promise<ClientEntity[]> {
-    return this.repo.find({ order: { name: 'ASC' } }) as Promise<ClientEntity[]>;
+    return this.repo.find({ order: { name: 'ASC' } });
   }
 
   findById(id: number): Promise<ClientEntity | null> {
-    return this.repo.findOneBy({ id }) as Promise<ClientEntity | null>;
+    return this.repo.findOneBy({ id });
   }
 
   create(data: Partial<ClientEntity>): Promise<ClientEntity> {
-    return this.repo.save(this.repo.create(data as Partial<ClientOrmEntity>)) as Promise<ClientEntity>;
+    return this.repo.save(this.repo.create(data as Partial<ClientOrmEntity>));
   }
 
   async update(id: number, data: Partial<ClientEntity>): Promise<ClientEntity> {
     const client = await this.repo.findOneBy({ id });
     Object.assign(client!, data);
-    return this.repo.save(client!) as unknown as Promise<ClientEntity>;
+    return this.repo.save(client!);
   }
 
   async remove(id: number): Promise<void> {

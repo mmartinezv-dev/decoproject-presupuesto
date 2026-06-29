@@ -33,7 +33,9 @@ export class BudgetsService {
   }
 
   create(dto: CreateBudgetDto): Promise<Budget> {
-    this.logger.log(`Creando presupuesto para cliente: ${dto.clientName || 'Sin cliente'}`);
+    this.logger.log(
+      `Creando presupuesto para cliente: ${dto.clientName || 'Sin cliente'}`,
+    );
     const budget = this.repo.create(dto as Partial<Budget>);
     return this.repo.save(budget);
   }

@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+} from 'typeorm';
 import { BudgetItem } from './budget-item.entity';
 
 @Entity()
@@ -63,6 +69,9 @@ export class Budget {
   @Column('decimal', { precision: 14, scale: 2, default: 0 })
   total: number;
 
-  @OneToMany(() => BudgetItem, (item) => item.budget, { cascade: true, eager: true })
+  @OneToMany(() => BudgetItem, (item) => item.budget, {
+    cascade: true,
+    eager: true,
+  })
   items: BudgetItem[];
 }

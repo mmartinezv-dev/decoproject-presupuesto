@@ -9,7 +9,10 @@ export class AuthApplicationService {
     private refreshTokenStore: RefreshTokenStore,
   ) {}
 
-  async login(username: string, password: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async login(
+    username: string,
+    password: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const validUser = process.env.AUTH_USER ?? 'admin';
     const validPass = process.env.AUTH_PASS ?? 'decoproject2024';
 
@@ -36,7 +39,9 @@ export class AuthApplicationService {
     return { accessToken, refreshToken };
   }
 
-  async refresh(oldRefreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async refresh(
+    oldRefreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     let payload: { sub: string; jti: string };
     try {
       payload = this.jwtService.verify(oldRefreshToken, {

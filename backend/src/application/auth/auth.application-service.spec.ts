@@ -33,7 +33,9 @@ describe('AuthApplicationService', () => {
 
   describe('login', () => {
     it('should throw UnauthorizedException for wrong credentials', async () => {
-      await expect(service.login('wrong', 'wrong')).rejects.toThrow(UnauthorizedException);
+      await expect(service.login('wrong', 'wrong')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should return accessToken and refreshToken on valid credentials', async () => {
@@ -51,12 +53,19 @@ describe('AuthApplicationService', () => {
 
   describe('refresh', () => {
     it('should throw UnauthorizedException for invalid refresh token', async () => {
-      mockJwtService.verify.mockImplementationOnce(() => { throw new Error('invalid'); });
-      await expect(service.refresh('bad.token')).rejects.toThrow(UnauthorizedException);
+      mockJwtService.verify.mockImplementationOnce(() => {
+        throw new Error('invalid');
+      });
+      await expect(service.refresh('bad.token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should rotate token and return new tokens', async () => {
-      mockJwtService.verify.mockReturnValueOnce({ sub: 'admin', jti: 'old-jti' });
+      mockJwtService.verify.mockReturnValueOnce({
+        sub: 'admin',
+        jti: 'old-jti',
+      });
       mockTokenStore.rotate.mockResolvedValueOnce('new-jti');
       mockJwtService.sign
         .mockReturnValueOnce('new.access.token')
@@ -66,7 +75,10 @@ describe('AuthApplicationService', () => {
 
       expect(result.accessToken).toBe('new.access.token');
       expect(result.refreshToken).toBe('new.refresh.token');
-      expect(mockTokenStore.rotate).toHaveBeenCalledWith('old-jti', expect.any(Number));
+      expect(mockTokenStore.rotate).toHaveBeenCalledWith(
+        'old-jti',
+        expect.any(Number),
+      );
     });
   });
 
@@ -78,7 +90,9 @@ describe('AuthApplicationService', () => {
     });
 
     it('should not throw if token is invalid on logout', async () => {
-      mockJwtService.verify.mockImplementationOnce(() => { throw new Error('invalid'); });
+      mockJwtService.verify.mockImplementationOnce(() => {
+        throw new Error('invalid');
+      });
       await expect(service.logout('bad.token')).resolves.not.toThrow();
     });
   });
