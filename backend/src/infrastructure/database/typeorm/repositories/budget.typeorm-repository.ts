@@ -18,7 +18,7 @@ export class BudgetTypeOrmRepository implements IBudgetRepository {
   findAll(): Promise<BudgetSummary[]> {
     return this.repo.find({
       order: { createdAt: 'DESC' },
-      select: { id: true, createdAt: true, clientName: true, total: true },
+      select: { id: true, correlativo: true, createdAt: true, clientName: true, total: true },
     });
   }
 
@@ -29,8 +29,15 @@ export class BudgetTypeOrmRepository implements IBudgetRepository {
     });
   }
 
-  create(data: Partial<BudgetEntity>): Promise<BudgetEntity> {
-    const budget = this.repo.create(data as Partial<BudgetOrmEntity>);
+  async create(data: Partial<BudgetEntity>): Promise<BudgetEntity> {
+    const { max } = await this.repo
+      .createQueryBuilder('b')
+      .select('MAX(b.correlativo)', 'max')
+      .getRawOne<{ max: number | null }>();
+    const budget = this.repo.create({
+      ...(data as Partial<BudgetOrmEntity>),
+      correlativo: (max ?? 0) + 1,
+    });
     return this.repo.save(budget);
   }
 

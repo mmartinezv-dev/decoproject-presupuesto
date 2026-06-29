@@ -27,7 +27,7 @@ const budgetContainerRef = ref<HTMLElement | null>(null)
 const exportingPdf = ref(false)
 
 const {
-  company, client, logo, notes, sections, images, saving, today,
+  company, client, correlativo, logo, notes, sections, images, saving, today,
   neto, iva, total,
   addRow, removeRow, addSection, removeSection, updateSectionTitle,
   visitFindings, visitSummary, preliminaryWorks,
@@ -145,6 +145,7 @@ onMounted(async () => {
           :company="company"
           :logo="logo"
           :date="today"
+          :correlativo="correlativo"
           @update:company="updateCompanyField"
           @update:logo="handleLogoChange"
         />

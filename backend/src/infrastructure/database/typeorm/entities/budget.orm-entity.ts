@@ -17,6 +17,9 @@ export class BudgetOrmEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ nullable: true })
+  correlativo: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

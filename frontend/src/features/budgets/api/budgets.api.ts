@@ -3,6 +3,7 @@ import type { Budget } from '../../../types'
 
 export interface BudgetListItem {
   id: number
+  correlativo: number
   createdAt: string
   clientName: string
   total: number

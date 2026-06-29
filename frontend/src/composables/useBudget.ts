@@ -20,6 +20,7 @@ export function useBudget() {
   })
 
   const client = reactive({ id: 0, name: '', rut: '', address: '', phone: '' })
+  const correlativo = ref<number | null>(null)
   const logo = ref('/logo-presupuesto.jpeg')
   const notes = ref(DEFAULT_NOTES)
   const sections = ref<BudgetSection[]>([{ title: 'Productos', items: [createEmptyRow()] }])
@@ -138,6 +139,7 @@ export function useBudget() {
   async function loadBudget(id: string) {
     const b = await api.get<Budget>(`/budgets/${id}`)
     if (!b) return
+    correlativo.value = b.correlativo ?? null
     company.name = b.companyName
     company.rut = b.companyRut
     company.address = b.companyAddress
@@ -228,6 +230,7 @@ export function useBudget() {
   return {
     company,
     client,
+    correlativo,
     logo,
     notes,
     sections,

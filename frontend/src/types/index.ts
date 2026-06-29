@@ -44,6 +44,7 @@ export interface CompanyInfo {
 
 export interface Budget {
   id?: number
+  correlativo?: number
   createdAt?: string
   companyName: string
   companyRut: string

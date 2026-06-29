@@ -105,7 +105,7 @@ function handleDelete(id: number) {
           >
             <td class="px-4 py-3.5">
               <span class="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-mono font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-                #{{ b.id }}
+                N°{{ String(b.correlativo).padStart(4, '0') }}
               </span>
             </td>
             <td class="px-4 py-3.5 text-zinc-600 dark:text-zinc-400">

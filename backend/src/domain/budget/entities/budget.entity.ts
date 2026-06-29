@@ -10,6 +10,7 @@ export interface BudgetItemEntity {
 
 export interface BudgetEntity {
   id?: number;
+  correlativo?: number;
   createdAt?: Date;
   companyName: string;
   companyRut: string;

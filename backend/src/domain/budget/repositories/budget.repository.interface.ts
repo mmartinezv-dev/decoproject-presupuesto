@@ -4,6 +4,7 @@ export const BUDGET_REPOSITORY = Symbol('BUDGET_REPOSITORY');
 
 export interface BudgetSummary {
   id: number;
+  correlativo: number;
   createdAt: Date;
   clientName: string;
   total: number;
