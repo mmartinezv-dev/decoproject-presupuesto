@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 import { api } from '../composables/useApi'
 import { useBudget } from '../composables/useBudget'
 import { useProductSearch } from '../composables/useProductSearch'
@@ -100,7 +101,7 @@ async function handleExportPdf() {
 async function handleSave() {
   const ok = await saveBudget(props.id)
   if (ok) {
-    alert('Presupuesto guardado correctamente')
+    toast.success('Presupuesto guardado correctamente')
     router.push('/presupuestos')
   }
 }

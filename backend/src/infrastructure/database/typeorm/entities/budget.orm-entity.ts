@@ -83,6 +83,7 @@ export class BudgetOrmEntity {
   @OneToMany(() => BudgetItemOrmEntity, (item) => item.budget, {
     cascade: true,
     eager: true,
+    orphanedRowAction: 'delete',
   })
   items: BudgetItemOrmEntity[];
 }

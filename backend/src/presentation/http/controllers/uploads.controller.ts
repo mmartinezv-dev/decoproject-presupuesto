@@ -25,9 +25,13 @@ export class UploadsController {
         },
       }),
       fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
+        const ext = extname(file.originalname).toLowerCase();
+        const allowedExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
+        if (!allowedExtensions.includes(ext)) {
           return cb(
-            new BadRequestException('Solo se permiten imágenes'),
+            new BadRequestException(
+              'Formato de imagen no permitido (solo png, jpg, jpeg, gif, webp)',
+            ),
             false,
           );
         }

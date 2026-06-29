@@ -25,7 +25,11 @@ export class ProductOrmEntity {
   @Column('decimal', { precision: 12, scale: 2, default: 0 })
   price: number;
 
-  @ManyToOne(() => CategoryOrmEntity, { nullable: true, eager: true })
+  @ManyToOne(() => CategoryOrmEntity, {
+    nullable: true,
+    eager: true,
+    onDelete: 'SET NULL',
+  })
   category: CategoryOrmEntity;
 
   @Column({ nullable: true })

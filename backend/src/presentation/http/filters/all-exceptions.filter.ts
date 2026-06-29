@@ -22,10 +22,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException
-        ? exception.message
-        : 'Error interno del servidor';
+    let message: string | string[] = 'Error interno del servidor';
+    if (exception instanceof HttpException) {
+      const exceptionResponse = exception.getResponse();
+      if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse !== null &&
+        'message' in exceptionResponse
+      ) {
+        const msg = (exceptionResponse as Record<string, unknown>).message;
+        message =
+          typeof msg === 'string' || Array.isArray(msg)
+            ? (msg as string | string[])
+            : exception.message;
+      } else {
+        message = exception.message;
+      }
+    }
 
     if (status >= 500) {
       this.logger.error(
@@ -33,8 +46,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : String(exception),
       );
     } else {
+      const logMessage = Array.isArray(message) ? message.join(', ') : message;
       this.logger.warn(
-        `${request.method} ${request.url} - ${status}: ${message}`,
+        `${request.method} ${request.url} - ${status}: ${logMessage}`,
       );
     }
 

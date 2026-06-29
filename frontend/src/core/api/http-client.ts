@@ -13,16 +13,33 @@ function createApiError(status: number, message: string): ApiError {
   return err
 }
 
-async function silentRefresh(auth: ReturnType<typeof useAuthStore>): Promise<boolean> {
-  try {
-    const res = await fetch(`${BASE}/auth/refresh`, { method: 'POST', credentials: 'include' })
-    if (res.ok) {
-      const { accessToken } = await res.json()
-      auth.setToken(accessToken)
-      return true
+let refreshPromise: Promise<boolean> | null = null
+
+async function silentRefresh(
+  auth: ReturnType<typeof useAuthStore>,
+): Promise<boolean> {
+  if (refreshPromise) return refreshPromise
+
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      if (res.ok) {
+        const { accessToken } = await res.json()
+        auth.setToken(accessToken)
+        return true
+      }
+    } catch {
+      /* ignore */
     }
-  } catch { /* ignore */ }
-  return false
+    return false
+  })()
+
+  const result = await refreshPromise
+  refreshPromise = null
+  return result
 }
 
 export async function httpClient<T>(url: string, opts?: RequestInit, isRetry = false): Promise<T> {
