@@ -69,7 +69,7 @@ function handlePrint() {
 }
 
 async function handleExportPdf() {
-  const { toCanvas } = await import('html-to-image')
+  const html2canvas = (await import('html2canvas-pro')).default
   const { jsPDF } = await import('jspdf')
 
   exportingPdf.value = true
@@ -82,7 +82,7 @@ async function handleExportPdf() {
   }
 
   try {
-    const PIXEL_RATIO = 2
+    const SCALE = 2
 
     // ── 1. Find safe break points (DOM element boundaries) ──
     // Walk visible block elements and collect their bottom edges relative to the container.
@@ -107,19 +107,13 @@ async function handleExportPdf() {
     }
     const sortedBreaks = [...breakPoints].sort((a, b) => a - b)
 
-    // ── 2. Capture full DOM as a canvas (browser renders all CSS natively) ──
-    const canvas = await toCanvas(element, {
-      pixelRatio: PIXEL_RATIO,
+    // ── 2. Capture DOM as canvas (html2canvas-pro supports oklab/oklch/color-mix) ──
+    const canvas = await html2canvas(element, {
+      scale: SCALE,
+      useCORS: true,
+      logging: false,
       backgroundColor: '#ffffff',
-      // Skip font embedding — avoids CORS errors reading Google Fonts stylesheet.
-      // The browser already has Inter loaded so foreignObject renders it correctly.
-      skipFonts: true,
-      // Placeholder for images that fail to load (404, CORS blocked)
-      imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==',
-      filter: (n) => {
-        if (n instanceof HTMLElement && n.classList.contains('no-print')) return false
-        return true
-      },
+      ignoreElements: (el) => el.classList.contains('no-print'),
     })
 
     // ── 3. Calculate page geometry ──
@@ -129,13 +123,13 @@ async function handleExportPdf() {
     const contentW = pageW - margin * 2
     const contentH = pageH - margin * 2
 
-    // Scale factor: maps DOM pixels → mm (the canvas is at PIXEL_RATIO resolution)
-    const domWidth = canvas.width / PIXEL_RATIO
+    // Scale factor: maps DOM pixels → mm (canvas is at SCALE× resolution)
+    const domWidth = canvas.width / SCALE
     const mmPerPx = contentW / domWidth
     const maxPagePx = contentH / mmPerPx // max page height in DOM pixels
 
     // ── 4. Determine page slices using smart break points ──
-    const totalHeightPx = canvas.height / PIXEL_RATIO
+    const totalHeightPx = canvas.height / SCALE
     const pages: Array<{ startPx: number; endPx: number }> = []
     let cursor = 0
 
@@ -168,8 +162,8 @@ async function handleExportPdf() {
       if (i > 0) pdf.addPage()
 
       const { startPx, endPx } = pages[i]
-      const srcY = startPx * PIXEL_RATIO
-      const srcH = (endPx - startPx) * PIXEL_RATIO
+      const srcY = startPx * SCALE
+      const srcH = (endPx - startPx) * SCALE
 
       const sliceCanvas = document.createElement('canvas')
       sliceCanvas.width = canvas.width

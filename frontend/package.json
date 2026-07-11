@@ -14,7 +14,7 @@
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/vue-query": "^5.101.2",
     "@vueuse/core": "^14.3.0",
-    "html-to-image": "^1.11.13",
+    "html2canvas-pro": "^2.2.3",
     "jspdf": "^4.2.1",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.3.0",
