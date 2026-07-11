@@ -3,10 +3,12 @@ import type { Budget } from '../../../types'
 
 export interface BudgetListItem {
   id: number
-  correlativo: number
+  correlativo: number | null
   createdAt: string
   clientName: string
   total: number
+  status: string
+  currentStep: number
 }
 
 export const budgetsApi = {

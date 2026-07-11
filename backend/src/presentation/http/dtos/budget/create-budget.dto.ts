@@ -5,6 +5,7 @@ import {
   IsArray,
   ValidateNested,
   Min,
+  Max,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CreateBudgetItemDto } from './create-budget-item.dto';
@@ -78,18 +79,32 @@ export class CreateBudgetDto {
 
   @IsNumber()
   @Min(0)
-  neto: number;
+  @IsOptional()
+  neto?: number;
 
   @IsNumber()
   @Min(0)
-  iva: number;
+  @IsOptional()
+  iva?: number;
 
   @IsNumber()
   @Min(0)
-  total: number;
+  @IsOptional()
+  total?: number;
+
+  @IsString()
+  @IsOptional()
+  status?: string;
+
+  @IsNumber()
+  @Min(1)
+  @Max(5)
+  @IsOptional()
+  currentStep?: number;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateBudgetItemDto)
-  items: CreateBudgetItemDto[];
+  @IsOptional()
+  items?: CreateBudgetItemDto[];
 }

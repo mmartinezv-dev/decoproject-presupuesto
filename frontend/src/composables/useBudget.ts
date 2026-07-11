@@ -21,6 +21,8 @@ export function useBudget() {
 
   const client = reactive({ id: 0, name: '', rut: '', address: '', phone: '' })
   const correlativo = ref<number | null>(null)
+  const draftId = ref<number | null>(null)
+  const status = ref<'borrador' | 'final'>('borrador')
   const logo = ref('/logo-presupuesto.jpeg')
   const notes = ref(DEFAULT_NOTES)
   const sections = ref<BudgetSection[]>([{ title: 'Productos', items: [createEmptyRow()] }])
@@ -136,10 +138,12 @@ export function useBudget() {
   }
 
   // --- Persistence ---
-  async function loadBudget(id: string) {
+  async function loadBudget(id: string): Promise<number | undefined> {
     const b = await api.get<Budget>(`/budgets/${id}`)
-    if (!b) return
+    if (!b) return undefined
     correlativo.value = b.correlativo ?? null
+    status.value = b.status ?? 'final'
+    draftId.value = b.id ?? null
     company.name = b.companyName
     company.rut = b.companyRut
     company.address = b.companyAddress
@@ -176,11 +180,12 @@ export function useBudget() {
     } else {
       sections.value = [...sectionMap.entries()].map(([title, items]) => ({ title, items }))
     }
+
+    return b.currentStep
   }
 
-  async function saveBudget(existingId?: string): Promise<boolean> {
-    saving.value = true
-    const payload = {
+  function buildPayload() {
+    return {
       companyName: company.name,
       companyRut: company.rut,
       companyAddress: company.address,
@@ -212,9 +217,36 @@ export function useBudget() {
           })),
       ),
     }
+  }
+
+  async function saveDraft(currentStep: number): Promise<number | false> {
+    saving.value = true
+    const payload = { ...buildPayload(), status: 'borrador', currentStep }
     try {
-      if (existingId) {
-        await api.put(`/budgets/${existingId}`, payload)
+      const id = draftId.value
+      if (id) {
+        await api.put(`/budgets/${id}`, payload)
+        return id
+      } else {
+        const created = await api.post<{ id: number }>('/budgets', payload)
+        draftId.value = created.id
+        return created.id
+      }
+    } catch {
+      toast.error('Error al guardar el borrador. Intentá de nuevo.')
+      return false
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function saveBudget(existingId?: string): Promise<boolean> {
+    saving.value = true
+    const payload = { ...buildPayload(), status: 'final', currentStep: 5 }
+    try {
+      const id = existingId || (draftId.value ? String(draftId.value) : null)
+      if (id) {
+        await api.put(`/budgets/${id}`, payload)
       } else {
         await api.post('/budgets', payload)
       }
@@ -256,6 +288,9 @@ export function useBudget() {
     updateImageCaption,
     handleLogoChange,
     loadBudget,
+    saveDraft,
     saveBudget,
+    draftId,
+    status,
   }
 }

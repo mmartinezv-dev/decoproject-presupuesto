@@ -45,6 +45,8 @@ export interface CompanyInfo {
 export interface Budget {
   id?: number
   correlativo?: number
+  status?: 'borrador' | 'final'
+  currentStep?: number
   createdAt?: string
   companyName: string
   companyRut: string

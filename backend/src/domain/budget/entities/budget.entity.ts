@@ -30,5 +30,7 @@ export interface BudgetEntity {
   neto: number;
   iva: number;
   total: number;
+  status?: string;
+  currentStep?: number;
   items: BudgetItemEntity[];
 }

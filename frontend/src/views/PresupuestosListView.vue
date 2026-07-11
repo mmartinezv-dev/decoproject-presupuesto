@@ -104,7 +104,13 @@ function handleDelete(id: number) {
             class="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/30"
           >
             <td class="px-4 py-3.5">
-              <span class="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-mono font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+              <template v-if="b.status === 'borrador'">
+                <span class="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
+                  Borrador
+                </span>
+                <span class="block mt-0.5 text-[10px] text-zinc-400 dark:text-zinc-500">Paso {{ b.currentStep }}/5</span>
+              </template>
+              <span v-else class="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-mono font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 N°{{ String(b.correlativo).padStart(4, '0') }}
               </span>
             </td>

@@ -36,7 +36,7 @@ const {
   addWork, removeWork, updateWork,
   addImages, removeImage, updateImageCaption,
   handleLogoChange,
-  loadBudget, saveBudget,
+  loadBudget, saveDraft, saveBudget, status,
 } = useBudget()
 
 const { searchResults, activeSectionIndex, activeRowIndex, search, pick, close } = useProductSearch()
@@ -98,6 +98,16 @@ async function handleExportPdf() {
   exportingPdf.value = false
 }
 
+async function handleSaveDraft() {
+  const result = await saveDraft(currentStep.value)
+  if (result !== false) {
+    toast.success('Borrador guardado')
+    if (!props.id) {
+      router.replace(`/presupuestos/${result}`)
+    }
+  }
+}
+
 async function handleSave() {
   const ok = await saveBudget(props.id)
   if (ok) {
@@ -109,7 +119,12 @@ async function handleSave() {
 onMounted(async () => {
   try {
     clients.value = await api.get('/clients')
-    if (props.id) await loadBudget(props.id)
+    if (props.id) {
+      const savedStep = await loadBudget(props.id)
+      if (status.value === 'borrador' && savedStep) {
+        currentStep.value = savedStep
+      }
+    }
   } finally {
     loading.value = false
   }
@@ -149,7 +164,10 @@ onMounted(async () => {
           @update:company="updateCompanyField"
           @update:logo="handleLogoChange"
         />
-        <div class="no-print flex justify-end mt-6">
+        <div class="no-print flex justify-end gap-3 mt-6">
+          <button class="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-semibold rounded-lg hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-500/10 transition-colors" :disabled="saving" @click="handleSaveDraft">
+            {{ saving ? 'Guardando...' : 'Guardar borrador' }}
+          </button>
           <button class="px-5 py-2.5 bg-brand-800 text-white text-sm font-semibold rounded-lg hover:bg-brand-900 transition-colors" @click="currentStep = 2">
             Siguiente →
           </button>
@@ -167,6 +185,9 @@ onMounted(async () => {
         <div class="no-print flex justify-between mt-6">
           <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 1">
             ← Anterior
+          </button>
+          <button class="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-semibold rounded-lg hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-500/10 transition-colors" :disabled="saving" @click="handleSaveDraft">
+            {{ saving ? 'Guardando...' : 'Guardar borrador' }}
           </button>
           <button class="px-5 py-2.5 bg-brand-800 text-white text-sm font-semibold rounded-lg hover:bg-brand-900 transition-colors" @click="currentStep = 3">
             Siguiente →
@@ -194,6 +215,9 @@ onMounted(async () => {
         <div class="no-print flex justify-between mt-6">
           <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 2">
             ← Anterior
+          </button>
+          <button class="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-semibold rounded-lg hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-500/10 transition-colors" :disabled="saving" @click="handleSaveDraft">
+            {{ saving ? 'Guardando...' : 'Guardar borrador' }}
           </button>
           <button class="px-5 py-2.5 bg-brand-800 text-white text-sm font-semibold rounded-lg hover:bg-brand-900 transition-colors" @click="currentStep = 4">
             Siguiente →
@@ -238,6 +262,9 @@ onMounted(async () => {
           <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 3">
             ← Anterior
           </button>
+          <button class="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-semibold rounded-lg hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-500/10 transition-colors" :disabled="saving" @click="handleSaveDraft">
+            {{ saving ? 'Guardando...' : 'Guardar borrador' }}
+          </button>
           <button class="px-5 py-2.5 bg-brand-800 text-white text-sm font-semibold rounded-lg hover:bg-brand-900 transition-colors" @click="currentStep = 5">
             Siguiente →
           </button>
@@ -259,6 +286,9 @@ onMounted(async () => {
         <div class="no-print flex justify-between mt-6 mb-4">
           <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 4">
             ← Anterior
+          </button>
+          <button class="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-semibold rounded-lg hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-500/10 transition-colors" :disabled="saving" @click="handleSaveDraft">
+            {{ saving ? 'Guardando...' : 'Guardar borrador' }}
           </button>
         </div>
 
