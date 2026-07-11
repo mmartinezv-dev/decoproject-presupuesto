@@ -82,48 +82,99 @@ async function handleExportPdf() {
   }
 
   try {
-    // Capture the full-height DOM as a canvas using the browser's own renderer
-    // (SVG foreignObject — supports all modern CSS including oklab/oklch/color-mix)
+    const PIXEL_RATIO = 2
+
+    // ── 1. Find safe break points (DOM element boundaries) ──
+    // Walk visible block elements and collect their bottom edges relative to the container.
+    // These are "safe Y positions" where cutting won't slice through content.
+    const containerRect = element.getBoundingClientRect()
+    const breakPoints = new Set<number>([0])
+
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT)
+    let node: Node | null = walker.nextNode()
+    while (node) {
+      const el = node as HTMLElement
+      if (el.offsetHeight === 0 || el.classList.contains('no-print')) {
+        node = walker.nextNode()
+        continue
+      }
+      const display = window.getComputedStyle(el).display
+      if (['block', 'flex', 'grid', 'table-row', 'list-item'].includes(display)) {
+        const bottom = Math.round(el.getBoundingClientRect().bottom - containerRect.top)
+        breakPoints.add(bottom)
+      }
+      node = walker.nextNode()
+    }
+    const sortedBreaks = [...breakPoints].sort((a, b) => a - b)
+
+    // ── 2. Capture full DOM as a canvas (browser renders all CSS natively) ──
     const canvas = await toCanvas(element, {
-      pixelRatio: 2,
+      pixelRatio: PIXEL_RATIO,
       backgroundColor: '#ffffff',
-      filter: (node) => {
-        // Exclude elements with .no-print class
-        if (node instanceof HTMLElement && node.classList.contains('no-print')) return false
+      filter: (n) => {
+        if (n instanceof HTMLElement && n.classList.contains('no-print')) return false
         return true
       },
     })
 
-    // A4 dimensions in mm and corresponding pixels at our DPI
-    const pageW = 210
+    // ── 3. Calculate page geometry ──
+    const pageW = 210 // A4 mm
     const pageH = 297
-    const margin = 10 // mm
+    const margin = 10
     const contentW = pageW - margin * 2
     const contentH = pageH - margin * 2
 
-    // Scale the canvas content to fit A4 width
-    const scale = contentW / (canvas.width / 2) // /2 because pixelRatio=2
-    const scaledH = (canvas.height / 2) * scale // total height in mm
+    // Scale factor: maps DOM pixels → mm (the canvas is at PIXEL_RATIO resolution)
+    const domWidth = canvas.width / PIXEL_RATIO
+    const mmPerPx = contentW / domWidth
+    const maxPagePx = contentH / mmPerPx // max page height in DOM pixels
 
+    // ── 4. Determine page slices using smart break points ──
+    const totalHeightPx = canvas.height / PIXEL_RATIO
+    const pages: Array<{ startPx: number; endPx: number }> = []
+    let cursor = 0
+
+    while (cursor < totalHeightPx) {
+      const idealEnd = cursor + maxPagePx
+      if (idealEnd >= totalHeightPx) {
+        // Last page — take whatever remains
+        pages.push({ startPx: cursor, endPx: totalHeightPx })
+        break
+      }
+      // Find the best break point: largest value <= idealEnd
+      let bestBreak = idealEnd
+      for (let i = sortedBreaks.length - 1; i >= 0; i--) {
+        if (sortedBreaks[i] <= idealEnd && sortedBreaks[i] > cursor) {
+          bestBreak = sortedBreaks[i]
+          break
+        }
+      }
+      // If no break point found between cursor and idealEnd, force cut (graceful degradation)
+      if (bestBreak <= cursor) bestBreak = idealEnd
+
+      pages.push({ startPx: cursor, endPx: bestBreak })
+      cursor = bestBreak
+    }
+
+    // ── 5. Build PDF from page slices ──
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-    const totalPages = Math.ceil(scaledH / contentH)
 
-    for (let page = 0; page < totalPages; page++) {
-      if (page > 0) pdf.addPage()
+    for (let i = 0; i < pages.length; i++) {
+      if (i > 0) pdf.addPage()
 
-      // Slice the corresponding portion of the canvas for this page
-      const srcY = page * (contentH / scale) * 2 // in canvas pixels
-      const srcHeight = Math.min((contentH / scale) * 2, canvas.height - srcY)
+      const { startPx, endPx } = pages[i]
+      const srcY = startPx * PIXEL_RATIO
+      const srcH = (endPx - startPx) * PIXEL_RATIO
 
       const sliceCanvas = document.createElement('canvas')
       sliceCanvas.width = canvas.width
-      sliceCanvas.height = srcHeight
+      sliceCanvas.height = srcH
       const ctx = sliceCanvas.getContext('2d')!
-      ctx.drawImage(canvas, 0, srcY, canvas.width, srcHeight, 0, 0, canvas.width, srcHeight)
+      ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH)
 
       const imgData = sliceCanvas.toDataURL('image/jpeg', 0.95)
-      const sliceH = (srcHeight / 2) * scale // height in mm for this slice
-      pdf.addImage(imgData, 'JPEG', margin, margin, contentW, sliceH)
+      const sliceHmm = (endPx - startPx) * mmPerPx
+      pdf.addImage(imgData, 'JPEG', margin, margin, contentW, sliceHmm)
     }
 
     const clientName = client.name || 'presupuesto'
