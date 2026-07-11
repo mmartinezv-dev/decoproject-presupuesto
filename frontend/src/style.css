@@ -113,11 +113,13 @@ html {
     background: transparent !important;
   }
 
+  /* Prevent sections from being split across pages */
   .print-section {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
+  /* Allow long tables to span pages but keep individual rows intact */
   .print-breakable {
     break-inside: auto;
     page-break-inside: auto;
@@ -131,5 +133,33 @@ html {
   .print-section-start {
     break-before: auto;
     page-break-before: auto;
+  }
+
+  /* Keep headings attached to following content */
+  h1, h2, h3, h4, h5, h6 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Prevent images and figures from being split */
+  img, figure, .grid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Keep table header visible after page break */
+  thead {
+    display: table-header-group;
+  }
+
+  /* Keep table footer at bottom */
+  tfoot {
+    display: table-footer-group;
+  }
+
+  /* Avoid orphan/widow text lines */
+  p {
+    orphans: 3;
+    widows: 3;
   }
 }
