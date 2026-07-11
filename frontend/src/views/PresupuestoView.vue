@@ -111,6 +111,11 @@ async function handleExportPdf() {
     const canvas = await toCanvas(element, {
       pixelRatio: PIXEL_RATIO,
       backgroundColor: '#ffffff',
+      // Skip font embedding — avoids CORS errors reading Google Fonts stylesheet.
+      // The browser already has Inter loaded so foreignObject renders it correctly.
+      skipFonts: true,
+      // Placeholder for images that fail to load (404, CORS blocked)
+      imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==',
       filter: (n) => {
         if (n instanceof HTMLElement && n.classList.contains('no-print')) return false
         return true
