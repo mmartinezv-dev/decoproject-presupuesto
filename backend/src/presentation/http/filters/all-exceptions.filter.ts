@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/node';
 import { Request, Response } from 'express';
 
 @Catch()
@@ -40,16 +41,36 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     }
 
+    const logPayload = {
+      method: request.method,
+      url: request.url,
+      statusCode: status,
+      message,
+      userAgent: request.headers['user-agent'],
+      ip: request.ip,
+    };
+
     if (status >= 500) {
-      this.logger.error(
-        `${request.method} ${request.url} - ${status}`,
-        exception instanceof Error ? exception.stack : String(exception),
-      );
+      this.logger.error(logPayload, exception instanceof Error ? exception.stack : String(exception));
+
+      if (Sentry.isInitialized()) {
+        Sentry.withScope((scope) => {
+          scope.setTag('status_code', String(status));
+          scope.setContext('request', {
+            method: request.method,
+            url: request.url,
+            headers: { 'user-agent': request.headers['user-agent'] },
+            body: request.body as Record<string, unknown>,
+          });
+          if (exception instanceof Error) {
+            Sentry.captureException(exception);
+          } else {
+            Sentry.captureMessage(String(exception), 'error');
+          }
+        });
+      }
     } else {
-      const logMessage = Array.isArray(message) ? message.join(', ') : message;
-      this.logger.warn(
-        `${request.method} ${request.url} - ${status}: ${logMessage}`,
-      );
+      this.logger.warn(logPayload);
     }
 
     response.status(status).json({

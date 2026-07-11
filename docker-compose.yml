@@ -10,6 +10,16 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+    command:
+      - --slow-query-log=ON
+      - --slow-query-log-file=/var/log/mysql/slow-query.log
+      - --long-query-time=1
+      - --log-error=/var/log/mysql/error.log
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s

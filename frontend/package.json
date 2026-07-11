@@ -11,6 +11,7 @@
   "dependencies": {
     "@formkit/auto-animate": "^0.9.0",
     "@lucide/vue": "^1.21.0",
+    "@sentry/vue": "^10.65.0",
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/vue-query": "^5.101.2",
     "@vueuse/core": "^14.3.0",

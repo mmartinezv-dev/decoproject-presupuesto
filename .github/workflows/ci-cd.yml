@@ -140,9 +140,25 @@ jobs:
             mv /home/admin/app /home/admin/app_backup
             mv /home/admin/app_new /home/admin/app
 
+            echo "=== Configurando directorio de logs ==="
+            sudo mkdir -p /var/log/decoproject
+            sudo chown admin:admin /var/log/decoproject
+
+            echo "=== Aplicando configuración de CloudWatch Agent ==="
+            if command -v amazon-cloudwatch-agent-ctl &> /dev/null && [ -f /home/admin/app/aws/cloudwatch-agent-config.json ]; then
+              sudo amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/home/admin/app/aws/cloudwatch-agent-config.json
+            fi
+
+            echo "=== Aplicando configuración de Nginx ==="
+            if [ -f /home/admin/app/aws/nginx.conf ]; then
+              sudo cp /home/admin/app/aws/nginx.conf /etc/nginx/sites-available/decoproject
+              sudo ln -sf /etc/nginx/sites-available/decoproject /etc/nginx/sites-enabled/decoproject
+              sudo nginx -t && sudo systemctl reload nginx
+            fi
+
             echo "=== Recargando PM2 (Zero Downtime) ==="
             cd /home/admin/app/backend
             pm2 reload ecosystem.config.js --update-env
             pm2 save
-            
+
             echo "=== Despliegue completo con éxito ==="
