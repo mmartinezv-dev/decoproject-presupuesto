@@ -19,7 +19,7 @@ const commandOpen = ref(false)
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden bg-zinc-50 font-sans antialiased dark:bg-zinc-950">
+  <div class="flex h-screen overflow-hidden print:h-auto print:overflow-visible bg-zinc-50 font-sans antialiased dark:bg-zinc-950">
     <!-- Sidebar -->
     <AppSidebar
       :collapsed="sidebarCollapsed"
@@ -27,7 +27,7 @@ const commandOpen = ref(false)
     />
 
     <!-- Main -->
-    <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+    <div class="flex min-w-0 flex-1 flex-col overflow-hidden print:overflow-visible">
       <AppHeader
         :is-dark="isDark"
         @toggle-dark="toggleDark"
