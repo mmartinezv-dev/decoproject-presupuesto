@@ -42,9 +42,8 @@ router.beforeEach(async (to) => {
   if (to.meta.public) return
 
   const auth = useAuthStore()
-  if (auth.isLoggedIn) return
 
-  // Token not in memory (e.g. page reload) — try silent refresh via HttpOnly cookie
+  // Always try silent refresh to validate the session is still alive
   try {
     const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' })
     if (res.ok) {
@@ -56,6 +55,8 @@ router.beforeEach(async (to) => {
     // Network error or parse failure — fallback a login
   }
 
+  // Refresh failed — session expired
+  auth.logout()
   return '/login'
 })
 

@@ -14,6 +14,16 @@ function createApiError(status: number, message: string): ApiError {
 }
 
 let refreshPromise: Promise<boolean> | null = null
+let sessionExpired = false
+
+function forceLogout(auth: ReturnType<typeof useAuthStore>): Promise<never> {
+  sessionExpired = true
+  auth.logout()
+  window.location.href = '/login'
+  // Return a never-resolving promise so callers don't get an error to handle
+  // (the page is navigating away)
+  return new Promise<never>(() => {})
+}
 
 async function silentRefresh(
   auth: ReturnType<typeof useAuthStore>,
@@ -43,6 +53,8 @@ async function silentRefresh(
 }
 
 export async function httpClient<T>(url: string, opts?: RequestInit, isRetry = false): Promise<T> {
+  if (sessionExpired) return new Promise<T>(() => {})
+
   const auth = useAuthStore()
   const token = auth.getToken()
 
@@ -59,15 +71,11 @@ export async function httpClient<T>(url: string, opts?: RequestInit, isRetry = f
   if (res.status === 401 && !isRetry) {
     const refreshed = await silentRefresh(auth)
     if (refreshed) return httpClient<T>(url, opts, true)
-    auth.logout()
-    window.location.href = '/login'
-    throw createApiError(401, 'No autorizado')
+    return forceLogout(auth)
   }
 
   if (res.status === 401) {
-    auth.logout()
-    window.location.href = '/login'
-    throw createApiError(401, 'No autorizado')
+    return forceLogout(auth)
   }
 
   if (!res.ok) {
