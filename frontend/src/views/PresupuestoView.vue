@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { api } from '../composables/useApi'
@@ -23,8 +23,6 @@ const router = useRouter()
 
 const STEPS = ['Empresa', 'Cliente', 'Inspección', 'Detalle', 'Finalizar']
 const currentStep = ref(1)
-const budgetContainerRef = ref<HTMLElement | null>(null)
-const exportingPdf = ref(false)
 
 const {
   company, client, correlativo, logo, notes, sections, images, saving, today,
@@ -68,131 +66,6 @@ function handlePrint() {
   window.print()
 }
 
-async function handleExportPdf() {
-  const html2canvas = (await import('html2canvas-pro')).default
-  const { jsPDF } = await import('jspdf')
-
-  exportingPdf.value = true
-  await nextTick()
-  // Allow browser to reflow all v-show elements (steps 1–4 become visible)
-  await new Promise(r => setTimeout(r, 150))
-
-  const element = budgetContainerRef.value
-  if (!element) {
-    exportingPdf.value = false
-    return
-  }
-
-  try {
-    const SCALE = 2
-
-    // ── 1. Find safe break points (DOM element boundaries) ──
-    // Walk visible block elements and collect their bottom edges relative to the container.
-    // These are "safe Y positions" where cutting won't slice through content.
-    const containerRect = element.getBoundingClientRect()
-    const breakPoints = new Set<number>([0])
-
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT)
-    let node: Node | null = walker.nextNode()
-    while (node) {
-      const el = node as HTMLElement
-      if (el.offsetHeight === 0 || el.classList.contains('no-print')) {
-        node = walker.nextNode()
-        continue
-      }
-      const display = window.getComputedStyle(el).display
-      if (['block', 'flex', 'grid', 'table-row', 'list-item'].includes(display)) {
-        const bottom = Math.round(el.getBoundingClientRect().bottom - containerRect.top)
-        breakPoints.add(bottom)
-      }
-      node = walker.nextNode()
-    }
-    const sortedBreaks = [...breakPoints].sort((a, b) => a - b)
-
-    // ── 2. Capture DOM as canvas (html2canvas-pro supports oklab/oklch/color-mix) ──
-    const canvas = await html2canvas(element, {
-      scale: SCALE,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      ignoreElements: (el) => el.classList.contains('no-print'),
-      onclone: (clonedDoc) => {
-        // Force light mode in the clone so text renders dark on white background
-        // (in dark mode, text is light-colored and invisible on the white PDF)
-        clonedDoc.documentElement.classList.remove('dark')
-      },
-    })
-
-    // ── 3. Calculate page geometry ──
-    const pageW = 210 // A4 mm
-    const pageH = 297
-    const margin = 10
-    const contentW = pageW - margin * 2
-    const contentH = pageH - margin * 2
-
-    // Scale factor: maps DOM pixels → mm (canvas is at SCALE× resolution)
-    const domWidth = canvas.width / SCALE
-    const mmPerPx = contentW / domWidth
-    const maxPagePx = contentH / mmPerPx // max page height in DOM pixels
-
-    // ── 4. Determine page slices using smart break points ──
-    const totalHeightPx = canvas.height / SCALE
-    const pages: Array<{ startPx: number; endPx: number }> = []
-    let cursor = 0
-
-    while (cursor < totalHeightPx) {
-      const idealEnd = cursor + maxPagePx
-      if (idealEnd >= totalHeightPx) {
-        // Last page — take whatever remains
-        pages.push({ startPx: cursor, endPx: totalHeightPx })
-        break
-      }
-      // Find the best break point: largest value <= idealEnd
-      let bestBreak = idealEnd
-      for (let i = sortedBreaks.length - 1; i >= 0; i--) {
-        if (sortedBreaks[i] <= idealEnd && sortedBreaks[i] > cursor) {
-          bestBreak = sortedBreaks[i]
-          break
-        }
-      }
-      // If no break point found between cursor and idealEnd, force cut (graceful degradation)
-      if (bestBreak <= cursor) bestBreak = idealEnd
-
-      pages.push({ startPx: cursor, endPx: bestBreak })
-      cursor = bestBreak
-    }
-
-    // ── 5. Build PDF from page slices ──
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-
-    for (let i = 0; i < pages.length; i++) {
-      if (i > 0) pdf.addPage()
-
-      const { startPx, endPx } = pages[i]
-      const srcY = startPx * SCALE
-      const srcH = (endPx - startPx) * SCALE
-
-      const sliceCanvas = document.createElement('canvas')
-      sliceCanvas.width = canvas.width
-      sliceCanvas.height = srcH
-      const ctx = sliceCanvas.getContext('2d')!
-      ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH)
-
-      const imgData = sliceCanvas.toDataURL('image/jpeg', 0.95)
-      const sliceHmm = (endPx - startPx) * mmPerPx
-      pdf.addImage(imgData, 'JPEG', margin, margin, contentW, sliceHmm)
-    }
-
-    const clientName = client.name || 'presupuesto'
-    const filename = `presupuesto-${clientName.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}.pdf`
-    pdf.save(filename)
-  } catch (err) {
-    toast.error('Error al exportar PDF. Intentá de nuevo.')
-    throw err
-  } finally {
-    exportingPdf.value = false
-  }
-}
 
 async function handleSaveDraft() {
   const result = await saveDraft(currentStep.value)
@@ -235,7 +108,7 @@ onMounted(async () => {
     <SkeletonLoader height="h-64" />
   </div>
 
-  <div v-else class="relative print:p-0" :class="{ 'pdf-exporting': exportingPdf }">
+  <div v-else class="relative print:p-0">
     <!-- Marca de agua -->
     <div class="hidden print:flex fixed inset-0 z-0 items-center justify-center pointer-events-none">
       <img
@@ -245,13 +118,13 @@ onMounted(async () => {
       />
     </div>
 
-    <div ref="budgetContainerRef" class="relative z-10 max-w-[210mm] mx-auto bg-white print:bg-transparent shadow-lg print:shadow-none rounded-xl print:rounded-none p-8 print:p-0">
+    <div class="relative z-10 max-w-[210mm] mx-auto bg-white print:bg-transparent shadow-lg print:shadow-none rounded-xl print:rounded-none p-8 print:p-0">
 
       <!-- Breadcrumb steps -->
-      <BudgetStepBar v-show="!exportingPdf" :steps="STEPS" :current="currentStep" @goto="currentStep = $event" />
+      <BudgetStepBar class="no-print" :steps="STEPS" :current="currentStep" @goto="currentStep = $event" />
 
       <!-- ── STEP 1: Empresa ── -->
-      <div v-show="currentStep === 1 || exportingPdf" class="print:!block">
+      <div v-show="currentStep === 1" class="print:!block">
         <BudgetHeader
           :company="company"
           :logo="logo"
@@ -271,7 +144,7 @@ onMounted(async () => {
       </div>
 
       <!-- ── STEP 2: Cliente ── -->
-      <div v-show="currentStep === 2 || exportingPdf" class="print:!block">
+      <div v-show="currentStep === 2" class="print:!block">
         <BudgetClientSection
           :client="client"
           :clients="clients"
@@ -292,7 +165,7 @@ onMounted(async () => {
       </div>
 
       <!-- ── STEP 3: Inspección ── -->
-      <div v-show="currentStep === 3 || exportingPdf" class="print:!block">
+      <div v-show="currentStep === 3" class="print:!block">
         <BudgetInspection
           :findings="visitFindings"
           :summary="visitSummary"
@@ -322,7 +195,7 @@ onMounted(async () => {
       </div>
 
       <!-- ── STEP 4: Detalle ── -->
-      <div v-show="currentStep === 4 || exportingPdf" class="print:!block">
+      <div v-show="currentStep === 4" class="print:!block">
         <BudgetItemsTable
           v-for="(section, si) in sections"
           :key="si"
@@ -368,7 +241,7 @@ onMounted(async () => {
       </div>
 
       <!-- ── STEP 5: Finalizar ── -->
-      <div v-show="currentStep === 5 || exportingPdf" class="print:!block">
+      <div v-show="currentStep === 5" class="print:!block">
         <BudgetImages
           title="Diseños y Renders (opcional)"
           :images="images"
@@ -388,7 +261,7 @@ onMounted(async () => {
           </button>
         </div>
 
-        <BudgetActions :saving="saving" @save="handleSave" @print="handlePrint" @pdf="handleExportPdf" />
+        <BudgetActions :saving="saving" @save="handleSave" @print="handlePrint" />
       </div>
 
       <!-- Pie de página (solo print y PDF) -->
@@ -398,12 +271,3 @@ onMounted(async () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.pdf-exporting :deep(.no-print) {
-  display: none !important;
-}
-.pdf-exporting .print-section {
-  display: block !important;
-}
-</style>

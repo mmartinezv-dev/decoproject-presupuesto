@@ -6,7 +6,6 @@ defineProps<{
 defineEmits<{
   save: []
   print: []
-  pdf: []
 }>()
 </script>
 
@@ -17,12 +16,6 @@ defineEmits<{
       @click="$emit('print')"
     >
       Imprimir
-    </button>
-    <button
-      class="px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm text-sm"
-      @click="$emit('pdf')"
-    >
-      Exportar PDF
     </button>
     <button
       :disabled="saving"
