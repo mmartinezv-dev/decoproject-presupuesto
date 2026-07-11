@@ -74,6 +74,8 @@ async function handleExportPdf() {
 
   exportingPdf.value = true
   await nextTick()
+  // Allow browser to reflow all v-show elements (steps 1–4 become visible)
+  await new Promise(r => setTimeout(r, 150))
 
   const element = budgetContainerRef.value
   if (!element) {
@@ -114,6 +116,11 @@ async function handleExportPdf() {
       logging: false,
       backgroundColor: '#ffffff',
       ignoreElements: (el) => el.classList.contains('no-print'),
+      onclone: (clonedDoc) => {
+        // Force light mode in the clone so text renders dark on white background
+        // (in dark mode, text is light-colored and invisible on the white PDF)
+        clonedDoc.documentElement.classList.remove('dark')
+      },
     })
 
     // ── 3. Calculate page geometry ──
