@@ -59,7 +59,7 @@ export class BudgetOrmEntity {
   @Column({ type: 'text', default: '' })
   notes: string;
 
-  @Column({ type: 'simple-json', nullable: true, default: '[]' })
+  @Column({ type: 'longtext', nullable: true, transformer: { to: (v: unknown) => JSON.stringify(v ?? []), from: (v: string) => (v ? JSON.parse(v) : []) } })
   visitFindings: { text: string; images: { src: string; caption: string }[] }[];
 
   @Column({ type: 'text', default: '' })
@@ -68,10 +68,10 @@ export class BudgetOrmEntity {
   @Column({ type: 'simple-json', nullable: true, default: '[]' })
   preliminaryWorks: string[];
 
-  @Column({ type: 'text', default: '' })
+  @Column({ type: 'longtext', default: '' })
   logo: string;
 
-  @Column({ type: 'simple-json', nullable: true, default: '[]' })
+  @Column({ type: 'longtext', nullable: true, transformer: { to: (v: unknown) => JSON.stringify(v ?? []), from: (v: string) => (v ? JSON.parse(v) : []) } })
   images: { src: string; caption: string }[];
 
   @Column('decimal', {

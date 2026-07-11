@@ -74,8 +74,7 @@ export class CreateBudgetDto {
 
   @IsArray()
   @IsOptional()
-  @IsString({ each: true })
-  images?: string[];
+  images?: { src: string; caption: string }[];
 
   @IsNumber()
   @Min(0)

@@ -78,21 +78,21 @@ export function useBudget() {
   function removeFinding(i: number) { visitFindings.value.splice(i, 1) }
   function updateFinding(i: number, v: string) { visitFindings.value[i].text = v }
 
-  async function uploadFiles(files: FileList): Promise<string[]> {
-    const fd = new FormData()
-    for (const file of Array.from(files)) {
-      fd.append('files', file)
-    }
-    const results = await api.upload<{ url: string }[]>('/uploads', fd)
-    return results.map((r) => r.url)
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
   }
 
   async function addFindingImages(findingIndex: number, e: Event) {
     const files = (e.target as HTMLInputElement).files
     if (!files) return
-    const urls = await uploadFiles(files)
-    for (const url of urls) {
-      visitFindings.value[findingIndex].images.push({ src: url, caption: '' })
+    for (const file of Array.from(files)) {
+      const src = await fileToBase64(file)
+      visitFindings.value[findingIndex].images.push({ src, caption: '' })
     }
     ;(e.target as HTMLInputElement).value = ''
   }
@@ -114,9 +114,9 @@ export function useBudget() {
     const input = e.target as HTMLInputElement
     const files = input.files
     if (!files) return
-    const urls = await uploadFiles(files)
-    for (const url of urls) {
-      images.value.push({ src: url, caption: '' })
+    for (const file of Array.from(files)) {
+      const src = await fileToBase64(file)
+      images.value.push({ src, caption: '' })
     }
     input.value = ''
   }
@@ -133,8 +133,7 @@ export function useBudget() {
   async function handleLogoChange(e: Event) {
     const files = (e.target as HTMLInputElement).files
     if (!files || files.length === 0) return
-    const urls = await uploadFiles(files)
-    if (urls[0]) logo.value = urls[0]
+    logo.value = await fileToBase64(files[0])
   }
 
   // --- Persistence ---
