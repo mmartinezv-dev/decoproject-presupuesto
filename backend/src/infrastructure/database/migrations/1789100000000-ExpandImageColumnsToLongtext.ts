@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ExpandImageColumnsToLongtext1789100000000
-  implements MigrationInterface
-{
+export class ExpandImageColumnsToLongtext1789100000000 implements MigrationInterface {
   name = 'ExpandImageColumnsToLongtext1789100000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

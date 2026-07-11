@@ -59,7 +59,18 @@ export class BudgetOrmEntity {
   @Column({ type: 'text', default: '' })
   notes: string;
 
-  @Column({ type: 'longtext', nullable: true, transformer: { to: (v: unknown) => JSON.stringify(v ?? []), from: (v: string) => (v ? JSON.parse(v) : []) } })
+  @Column({
+    type: 'longtext',
+    nullable: true,
+    transformer: {
+      to: (v: unknown) => JSON.stringify(v ?? []),
+      from: (v: string) =>
+        (v ? JSON.parse(v) : []) as {
+          text: string;
+          images: { src: string; caption: string }[];
+        }[],
+    },
+  })
   visitFindings: { text: string; images: { src: string; caption: string }[] }[];
 
   @Column({ type: 'text', default: '' })
@@ -71,7 +82,15 @@ export class BudgetOrmEntity {
   @Column({ type: 'longtext', default: '' })
   logo: string;
 
-  @Column({ type: 'longtext', nullable: true, transformer: { to: (v: unknown) => JSON.stringify(v ?? []), from: (v: string) => (v ? JSON.parse(v) : []) } })
+  @Column({
+    type: 'longtext',
+    nullable: true,
+    transformer: {
+      to: (v: unknown) => JSON.stringify(v ?? []),
+      from: (v: string) =>
+        (v ? JSON.parse(v) : []) as { src: string; caption: string }[],
+    },
+  })
   images: { src: string; caption: string }[];
 
   @Column('decimal', {
