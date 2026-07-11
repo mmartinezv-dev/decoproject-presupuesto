@@ -78,11 +78,13 @@ const emit = defineEmits<{
               <div v-if="f.images.length" class="grid grid-cols-3 gap-2 mb-3">
                 <div v-for="(img, j) in f.images" :key="j" class="relative group flex flex-col gap-1">
                   <div class="relative">
-                    <img
-                      :src="img.src"
-                      :alt="img.caption || `Imagen ${j + 1}`"
-                      class="w-full h-28 object-cover rounded-lg border border-zinc-200 dark:border-zinc-700"
-                    />
+                    <div class="w-full h-32 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center overflow-hidden">
+                      <img
+                        :src="img.src"
+                        :alt="img.caption || `Imagen ${j + 1}`"
+                        class="max-w-full max-h-full object-contain"
+                      />
+                    </div>
                     <button
                       class="no-print absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                       @click="emit('removeFindingImage', i, j)"

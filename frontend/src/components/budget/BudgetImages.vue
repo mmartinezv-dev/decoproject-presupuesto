@@ -19,11 +19,13 @@ const emit = defineEmits<{
     <div v-if="images.length" class="grid grid-cols-2 gap-4 mb-4">
       <div v-for="(img, i) in images" :key="i" class="relative group flex flex-col gap-1.5">
         <div class="relative">
-          <img
-            :src="img.src"
-            class="w-full h-48 object-cover rounded-lg border border-zinc-200 dark:border-zinc-700"
-            :alt="img.caption || `Imagen ${i + 1}`"
-          />
+          <div class="w-full h-52 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center overflow-hidden">
+            <img
+              :src="img.src"
+              class="max-w-full max-h-full object-contain"
+              :alt="img.caption || `Imagen ${i + 1}`"
+            />
+          </div>
           <button
             class="no-print absolute top-1.5 right-1.5 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
             title="Eliminar imagen"
