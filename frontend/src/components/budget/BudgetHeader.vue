@@ -68,10 +68,9 @@ defineEmits<{
 
     <!-- Título + fecha + correlativo -->
     <div class="text-right">
-      <h1 class="text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">PRESUPUESTO</h1>
-      <p v-if="correlativo" class="text-sm font-semibold text-brand-700 dark:text-brand-400 mt-0.5 tracking-wide">
-        N°{{ String(correlativo).padStart(4, '0') }}
-      </p>
+      <h1 class="text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">
+        PRESUPUESTO<span v-if="correlativo"> #{{ correlativo }}</span>
+      </h1>
       <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{{ date }}</p>
     </div>
   </div>

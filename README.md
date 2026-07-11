@@ -91,18 +91,14 @@ docker compose up --build
 
 #### 1. Base de datos
 
+Puedes iniciar un contenedor de base de datos MySQL 8.0 usando la configuración provista en `docker-compose.yml`:
+
 ```bash
-docker start nicomix_db
+# Iniciar solo el servicio de base de datos en segundo plano
+docker compose up -d db
 ```
 
-> Primera vez: crear la base de datos
-> ```bash
-> docker exec nicomix_db mariadb -uroot -proot_password -e "
->   CREATE DATABASE IF NOT EXISTS decoproject CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
->   CREATE USER IF NOT EXISTS 'decoproject'@'%' IDENTIFIED BY 'decoproject';
->   GRANT ALL PRIVILEGES ON decoproject.* TO 'decoproject'@'%';
->   FLUSH PRIVILEGES;"
-> ```
+> Si prefieres usar una base de datos propia, asegúrate de crear una base de datos llamada `decoproject` y configurar un usuario con permisos completos.
 
 #### 2. Backend
 
@@ -131,7 +127,13 @@ App disponible en `http://localhost:5173`
 
 ## Variables de entorno
 
-Crear `backend/.env`:
+El backend requiere un archivo `.env` para su configuración. Puedes crear uno copiando el archivo de ejemplo:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+El contenido por defecto del archivo `.env` es el siguiente:
 
 ```env
 DB_HOST=localhost
@@ -149,7 +151,11 @@ JWT_ACCESS_EXPIRES=900
 JWT_REFRESH_EXPIRES=604800
 ```
 
-> En producción reemplazar los valores de los secrets por strings largos y aleatorios.
+> [!IMPORTANT]
+> En producción, reemplaza los valores de los secretos por cadenas largas y aleatorias.
+
+> [!NOTE]
+> Si utilizas Docker Compose (Opción A), el archivo `backend/.env` sigue siendo obligatorio ya que se carga en el contenedor del backend mediante `env_file: ./backend/.env`.
 
 ---
 
@@ -265,6 +271,14 @@ bash aws/setup.sh
 ### Variables de entorno en producción
 
 Crear `/home/admin/app/backend/.env` en el servidor con los valores de producción (secrets reales, `NODE_ENV=production`).
+
+### Configuración de PM2 en producción
+
+Dado que `backend/ecosystem.config.js` está ignorado en git por contener secretos/configuración específica del servidor, se debe crear en el servidor antes del inicio de PM2. Puedes crearlo copiando el archivo de plantilla:
+
+```bash
+cp /home/admin/app/backend/ecosystem.config.js.example /home/admin/app/backend/ecosystem.config.js
+```
 
 ---
 

@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BudgetOrmEntity } from '../entities/budget.orm-entity';
+import { BudgetItemOrmEntity } from '../entities/budget-item.orm-entity';
 import {
   IBudgetRepository,
   BudgetSummary,
@@ -65,18 +66,28 @@ export class BudgetTypeOrmRepository implements IBudgetRepository {
       where: { id },
       relations: { items: true },
     });
+    if (!budget) throw new NotFoundException(`Presupuesto #${id} no encontrado`);
 
     const isFinalizing =
-      data.status === 'final' && budget!.status === 'borrador';
+      data.status === 'final' && budget.status === 'borrador';
 
-    budget!.items = [];
-    Object.assign(budget!, data);
+    const { items, ...plainData } = data;
+    Object.assign(budget, plainData);
 
-    if (isFinalizing && !budget!.correlativo) {
-      budget!.correlativo = await this.findNextCorrelativo();
+    if (items !== undefined) {
+      budget.items = items.map((item) => {
+        const itemEntity = new BudgetItemOrmEntity();
+        Object.assign(itemEntity, item);
+        itemEntity.budget = budget;
+        return itemEntity;
+      });
     }
 
-    return this.repo.save(budget!);
+    if (isFinalizing && !budget.correlativo) {
+      budget.correlativo = await this.findNextCorrelativo();
+    }
+
+    return this.repo.save(budget);
   }
 
   async remove(id: number): Promise<void> {
