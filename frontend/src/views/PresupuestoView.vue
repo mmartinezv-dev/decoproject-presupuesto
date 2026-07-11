@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { api } from '../composables/useApi'
@@ -35,7 +35,10 @@ const {
   addImages, removeImage, updateImageCaption,
   handleLogoChange,
   loadBudget, saveDraft, saveBudget, status,
+  draftId,
 } = useBudget()
+
+const displayId = computed(() => correlativo.value || draftId.value)
 
 const { searchResults, activeSectionIndex, activeRowIndex, search, pick, close } = useProductSearch()
 
@@ -129,7 +132,7 @@ onMounted(async () => {
           :company="company"
           :logo="logo"
           :date="today"
-          :correlativo="correlativo"
+          :correlativo="displayId"
           @update:company="updateCompanyField"
           @update:logo="handleLogoChange"
         />
