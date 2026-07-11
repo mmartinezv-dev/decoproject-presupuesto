@@ -19,5 +19,22 @@ defineEmits<{
       @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
     ></textarea>
     <p class="hidden print:block text-sm text-zinc-600 whitespace-pre-line leading-relaxed">{{ modelValue }}</p>
+
+    <!-- Datos bancarios -->
+    <div class="mt-4 rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-800/50">
+      <p class="text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500 mb-1.5">Datos de Transferencia</p>
+      <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-zinc-700 dark:text-zinc-300">
+        <span class="text-zinc-500 dark:text-zinc-400">Banco</span>
+        <span class="font-medium">Santander</span>
+        <span class="text-zinc-500 dark:text-zinc-400">Cuenta Corriente</span>
+        <span class="font-medium">7309099-7</span>
+        <span class="text-zinc-500 dark:text-zinc-400">Titular</span>
+        <span class="font-medium">DecoProject</span>
+        <span class="text-zinc-500 dark:text-zinc-400">RUT</span>
+        <span class="font-medium">76.865.966-4</span>
+        <span class="text-zinc-500 dark:text-zinc-400">Email</span>
+        <span class="font-medium">decoproject26@gmail.com</span>
+      </div>
+    </div>
   </div>
 </template>
