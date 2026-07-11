@@ -58,7 +58,11 @@ export class BudgetTypeOrmRepository implements IBudgetRepository {
         : undefined,
       status: data.status ?? 'borrador',
     });
-    return this.repo.save(budget);
+    const saved = await this.repo.save(budget);
+    saved.items?.forEach((item) => {
+      delete (item as Partial<BudgetItemOrmEntity>).budget;
+    });
+    return saved;
   }
 
   async update(id: number, data: Partial<BudgetEntity>): Promise<BudgetEntity> {
@@ -87,7 +91,11 @@ export class BudgetTypeOrmRepository implements IBudgetRepository {
       budget.correlativo = await this.findNextCorrelativo();
     }
 
-    return this.repo.save(budget);
+    const saved = await this.repo.save(budget);
+    saved.items?.forEach((item) => {
+      delete (item as Partial<BudgetItemOrmEntity>).budget;
+    });
+    return saved;
   }
 
   async remove(id: number): Promise<void> {
