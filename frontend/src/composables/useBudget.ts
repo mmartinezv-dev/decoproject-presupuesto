@@ -1,7 +1,7 @@
 import { ref, reactive, computed } from 'vue'
 import { toast } from 'vue-sonner'
 import { api } from './useApi'
-import type { BudgetItem, BudgetSection, CompanyInfo, Budget } from '../types'
+import type { BudgetItem, BudgetSection, CompanyInfo, Budget, SpecialAnnotation } from '../types'
 
 const DEFAULT_NOTES = `Validez de la oferta: 15 días.
 Tiempo estimado de ejecución: a convenir.
@@ -9,6 +9,30 @@ Forma de pago: 50% anticipo, 50% contra entrega.`
 
 function createEmptyRow(): BudgetItem {
   return { productName: '', unit: 'un', quantity: 1, price: 0 }
+}
+
+function createEmptyAnnotation(): SpecialAnnotation {
+  return { title: 'Anotación especial', text: '' }
+}
+
+function normalizeSpecialAnnotations(
+  annotations: (string | SpecialAnnotation)[] | undefined,
+): SpecialAnnotation[] {
+  if (!annotations?.length) return [createEmptyAnnotation()]
+
+  return annotations.map((annotation, index) => {
+    if (typeof annotation === 'string') {
+      return {
+        title: `Anotación ${index + 1}`,
+        text: annotation,
+      }
+    }
+
+    return {
+      title: annotation.title || `Anotación ${index + 1}`,
+      text: annotation.text || '',
+    }
+  })
 }
 
 export function useBudget() {
@@ -30,7 +54,7 @@ export function useBudget() {
   const visitFindings = ref<{ text: string; images: { src: string; caption: string }[] }[]>([{ text: '', images: [] }])
   const visitSummary = ref('')
   const preliminaryWorks = ref<string[]>([''])
-  const specialAnnotations = ref<string[]>([''])
+  const specialAnnotations = ref<SpecialAnnotation[]>([createEmptyAnnotation()])
   const saving = ref(false)
 
   const today = new Date().toLocaleDateString('es-CL', {
@@ -110,9 +134,10 @@ export function useBudget() {
   function removeWork(i: number) { preliminaryWorks.value.splice(i, 1) }
   function updateWork(i: number, v: string) { preliminaryWorks.value[i] = v }
 
-  function addSpecialAnnotation() { specialAnnotations.value.push('') }
+  function addSpecialAnnotation() { specialAnnotations.value.push(createEmptyAnnotation()) }
   function removeSpecialAnnotation(i: number) { specialAnnotations.value.splice(i, 1) }
-  function updateSpecialAnnotation(i: number, v: string) { specialAnnotations.value[i] = v }
+  function updateSpecialAnnotationTitle(i: number, v: string) { specialAnnotations.value[i].title = v }
+  function updateSpecialAnnotationText(i: number, v: string) { specialAnnotations.value[i].text = v }
 
   // --- Evidence images ---
   async function addImages(e: Event) {
@@ -163,7 +188,7 @@ export function useBudget() {
     visitFindings.value = b.visitFindings?.length ? b.visitFindings : [{ text: '', images: [] }]
     visitSummary.value = b.visitSummary || ''
     preliminaryWorks.value = b.preliminaryWorks?.length ? b.preliminaryWorks : ['']
-    specialAnnotations.value = b.specialAnnotations?.length ? b.specialAnnotations : ['']
+    specialAnnotations.value = normalizeSpecialAnnotations(b.specialAnnotations)
     logo.value = b.logo || ''
     images.value = b.images || []
 
@@ -204,7 +229,7 @@ export function useBudget() {
       visitFindings: visitFindings.value.filter((f) => f.text || f.images.length),
       visitSummary: visitSummary.value,
       preliminaryWorks: preliminaryWorks.value.filter(Boolean),
-      specialAnnotations: specialAnnotations.value.filter(Boolean),
+      specialAnnotations: specialAnnotations.value.filter((annotation) => annotation.text.trim()),
       logo: logo.value,
       images: images.value,
       neto: neto.value,
@@ -290,7 +315,7 @@ export function useBudget() {
     addFinding, removeFinding, updateFinding,
     addFindingImages, removeFindingImage, updateFindingImageCaption,
     addWork, removeWork, updateWork,
-    addSpecialAnnotation, removeSpecialAnnotation, updateSpecialAnnotation,
+    addSpecialAnnotation, removeSpecialAnnotation, updateSpecialAnnotationTitle, updateSpecialAnnotationText,
     addImages,
     removeImage,
     updateImageCaption,

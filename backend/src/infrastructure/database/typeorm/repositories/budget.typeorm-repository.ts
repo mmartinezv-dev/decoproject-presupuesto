@@ -39,13 +39,13 @@ export class BudgetTypeOrmRepository implements IBudgetRepository {
   }
 
   async findNextCorrelativo(): Promise<number> {
-    const [latest] = await this.repo.find({
-      select: { correlativo: true },
-      order: { correlativo: 'DESC' },
-      take: 1,
-      withDeleted: true,
-    });
-    return (latest?.correlativo ?? 0) + 1;
+    const result = await this.repo
+      .createQueryBuilder('budget')
+      .withDeleted()
+      .select('MAX(budget.correlativo)', 'max')
+      .getRawOne<{ max: string | null }>();
+
+    return Number(result?.max ?? 0) + 1;
   }
 
   async create(data: Partial<BudgetEntity>): Promise<BudgetEntity> {

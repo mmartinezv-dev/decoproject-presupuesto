@@ -33,7 +33,7 @@ const {
   addFinding, removeFinding, updateFinding,
   addFindingImages, removeFindingImage, updateFindingImageCaption,
   addWork, removeWork, updateWork,
-  addSpecialAnnotation, removeSpecialAnnotation, updateSpecialAnnotation,
+  addSpecialAnnotation, removeSpecialAnnotation, updateSpecialAnnotationTitle, updateSpecialAnnotationText,
   addImages, removeImage, updateImageCaption,
   handleLogoChange,
   loadBudget, saveDraft, saveBudget, status,
@@ -205,7 +205,8 @@ onMounted(async () => {
           :annotations="specialAnnotations"
           @add="addSpecialAnnotation"
           @remove="removeSpecialAnnotation"
-          @update="updateSpecialAnnotation"
+          @update-title="updateSpecialAnnotationTitle"
+          @update-text="updateSpecialAnnotationText"
         />
         <div class="no-print flex justify-between mt-6">
           <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 3">

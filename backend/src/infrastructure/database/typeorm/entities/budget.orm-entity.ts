@@ -80,7 +80,7 @@ export class BudgetOrmEntity {
   preliminaryWorks: string[];
 
   @Column({ type: 'simple-json', nullable: true, default: '[]' })
-  specialAnnotations: string[];
+  specialAnnotations: { title: string; text: string }[];
 
   @Column({ type: 'longtext', default: '' })
   logo: string;

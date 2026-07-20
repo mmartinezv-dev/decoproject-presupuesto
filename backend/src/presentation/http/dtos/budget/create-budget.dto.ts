@@ -70,8 +70,10 @@ export class CreateBudgetDto {
 
   @IsArray()
   @IsOptional()
-  @IsString({ each: true })
-  specialAnnotations?: string[];
+  specialAnnotations?: {
+    title: string;
+    text: string;
+  }[];
 
   @IsString()
   @IsOptional()

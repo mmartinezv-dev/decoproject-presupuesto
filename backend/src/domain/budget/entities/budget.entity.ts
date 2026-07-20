@@ -25,7 +25,7 @@ export interface BudgetEntity {
   visitFindings: { text: string; images: { src: string; caption: string }[] }[];
   visitSummary: string;
   preliminaryWorks: string[];
-  specialAnnotations: string[];
+  specialAnnotations: { title: string; text: string }[];
   logo: string;
   images: { src: string; caption: string }[];
   neto: number;

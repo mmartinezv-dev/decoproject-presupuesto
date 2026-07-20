@@ -35,6 +35,11 @@ export interface BudgetSection {
   items: BudgetItem[]
 }
 
+export interface SpecialAnnotation {
+  title: string
+  text: string
+}
+
 export interface CompanyInfo {
   name: string
   rut: string
@@ -61,7 +66,7 @@ export interface Budget {
   visitFindings?: { text: string; images: { src: string; caption: string }[] }[]
   visitSummary?: string
   preliminaryWorks?: string[]
-  specialAnnotations?: string[]
+  specialAnnotations?: SpecialAnnotation[]
   logo: string
   images?: { src: string; caption: string }[]
   neto: number
