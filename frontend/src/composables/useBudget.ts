@@ -35,6 +35,18 @@ function normalizeSpecialAnnotations(
   })
 }
 
+function getSaveErrorMessage(error: unknown, fallback: string) {
+  if (!(error instanceof Error) || !error.message) return fallback
+
+  try {
+    const body = JSON.parse(error.message) as { message?: string | string[] }
+    if (Array.isArray(body.message)) return body.message.join('\n')
+    return body.message || fallback
+  } catch {
+    return error.message
+  }
+}
+
 export function useBudget() {
   const company = reactive<CompanyInfo>({
     name: 'DecoProject',
@@ -263,8 +275,8 @@ export function useBudget() {
         draftId.value = created.id
         return created.id
       }
-    } catch {
-      toast.error('Error al guardar el borrador. Intentá de nuevo.')
+    } catch (error) {
+      toast.error(getSaveErrorMessage(error, 'Error al guardar el borrador. Intentá de nuevo.'))
       return false
     } finally {
       saving.value = false
@@ -282,8 +294,8 @@ export function useBudget() {
         await api.post('/budgets', payload)
       }
       return true
-    } catch {
-      toast.error('Error al guardar el presupuesto. Intentá de nuevo.')
+    } catch (error) {
+      toast.error(getSaveErrorMessage(error, 'Error al guardar el presupuesto. Intentá de nuevo.'))
       return false
     } finally {
       saving.value = false
