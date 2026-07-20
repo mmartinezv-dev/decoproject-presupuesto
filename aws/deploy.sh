@@ -15,8 +15,11 @@ git pull origin main
 
 echo "=== [2/4] Rebuilding backend ==="
 cd "$APP_DIR/backend"
-npm ci --omit=dev
+npm ci
 npm run build
+node backup_database.js
+npm run migration:run:prod
+npm prune --omit=dev
 
 echo "=== [3/4] Rebuilding frontend ==="
 cd "$APP_DIR/frontend"

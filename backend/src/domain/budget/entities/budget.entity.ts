@@ -6,7 +6,13 @@ export interface BudgetItemEntity {
   quantity: number;
   price: number;
   subtotal: number;
+  sectionIndex?: number | null;
   sectionManualTotal?: number | null;
+}
+
+export interface BudgetSectionEntity {
+  title: string;
+  manualTotal: number | null;
 }
 
 export interface BudgetEntity {
@@ -27,6 +33,7 @@ export interface BudgetEntity {
   visitSummary: string;
   preliminaryWorks: string[];
   specialAnnotations: { title: string; text: string }[];
+  sections?: BudgetSectionEntity[];
   logo: string;
   images: { src: string; caption: string }[];
   neto: number;

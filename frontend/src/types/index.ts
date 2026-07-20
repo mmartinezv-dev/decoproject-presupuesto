@@ -23,11 +23,13 @@ export interface Client {
 }
 
 export interface BudgetItem {
+  id?: number
   productName: string
   unit: string
   quantity: number
   price: number
   section?: string
+  sectionIndex?: number | null
   sectionManualTotal?: number | null
 }
 
@@ -40,6 +42,11 @@ export interface BudgetSection {
 export interface SpecialAnnotation {
   title: string
   text: string
+}
+
+export interface BudgetSectionMetadata {
+  title: string
+  manualTotal: number | null
 }
 
 export interface CompanyInfo {
@@ -69,6 +76,7 @@ export interface Budget {
   visitSummary?: string
   preliminaryWorks?: string[]
   specialAnnotations?: SpecialAnnotation[]
+  sections?: BudgetSectionMetadata[]
   logo: string
   images?: { src: string; caption: string }[]
   neto: number

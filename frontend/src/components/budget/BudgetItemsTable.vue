@@ -117,6 +117,7 @@ const dropdownStyle = computed(() => {
             v-for="(row, i) in items"
             :key="i"
             class="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+            :class="{ 'print:hidden': !row.productName.trim() }"
           >
             <!-- Producto con autocompletado -->
             <td class="py-2 px-3">

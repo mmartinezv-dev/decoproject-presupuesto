@@ -6,7 +6,11 @@ export class BudgetItemOrmEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => BudgetOrmEntity, (b) => b.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => BudgetOrmEntity, (b) => b.items, {
+    nullable: false,
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
+  })
   budget: BudgetOrmEntity;
 
   @Column()
@@ -38,6 +42,9 @@ export class BudgetItemOrmEntity {
     transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) },
   })
   subtotal: number;
+
+  @Column({ type: 'int', nullable: true })
+  sectionIndex: number | null;
 
   @Column('decimal', {
     precision: 14,

@@ -236,6 +236,53 @@ describe('BudgetApplicationService', () => {
         'Creando presupuesto para cliente: Sin cliente',
       );
     });
+
+    it('should recalculate item subtotals and totals using section overrides', async () => {
+      const dto: Partial<BudgetEntity> = {
+        neto: 1,
+        iva: 1,
+        total: 2,
+        sections: [
+          { title: 'Repetida', manualTotal: null },
+          { title: 'Repetida', manualTotal: 1250 },
+        ],
+        items: [
+          {
+            productName: 'A',
+            section: 'Repetida',
+            sectionIndex: 0,
+            unit: 'un',
+            quantity: 2,
+            price: 100,
+            subtotal: 1,
+          },
+          {
+            productName: 'B',
+            section: 'Repetida',
+            sectionIndex: 1,
+            unit: 'un',
+            quantity: 3,
+            price: 200,
+            subtotal: 1,
+          },
+        ],
+      };
+      repository.create.mockResolvedValueOnce({} as BudgetEntity);
+
+      await service.create(dto);
+
+      expect(repository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          neto: 1450,
+          iva: 276,
+          total: 1726,
+          items: [
+            expect.objectContaining({ subtotal: 200, sectionIndex: 0 }),
+            expect.objectContaining({ subtotal: 600, sectionIndex: 1 }),
+          ],
+        }),
+      );
+    });
   });
 
   describe('update', () => {

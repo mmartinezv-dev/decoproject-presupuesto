@@ -18,6 +18,15 @@ const mockTokenStore = {
 describe('AuthApplicationService', () => {
   let service: AuthApplicationService;
 
+  beforeAll(() => {
+    process.env.AUTH_USER = 'test-admin';
+    process.env.AUTH_PASS = 'test-password';
+    process.env.JWT_ACCESS_SECRET =
+      'test-access-secret-with-at-least-32-characters';
+    process.env.JWT_REFRESH_SECRET =
+      'test-refresh-secret-with-at-least-32-characters';
+  });
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -44,7 +53,7 @@ describe('AuthApplicationService', () => {
         .mockReturnValueOnce('access.token')
         .mockReturnValueOnce('refresh.token');
 
-      const result = await service.login('admin', 'decoproject2024');
+      const result = await service.login('test-admin', 'test-password');
 
       expect(result.accessToken).toBe('access.token');
       expect(result.refreshToken).toBe('refresh.token');

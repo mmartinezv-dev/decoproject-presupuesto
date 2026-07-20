@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddSectionManualTotalToBudgetItem1789300000000
-  implements MigrationInterface
-{
+export class AddSectionManualTotalToBudgetItem1789300000000 implements MigrationInterface {
   name = 'AddSectionManualTotalToBudgetItem1789300000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

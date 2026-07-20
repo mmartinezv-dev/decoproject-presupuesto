@@ -51,7 +51,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     };
 
     if (status >= 500) {
-      this.logger.error(logPayload, exception instanceof Error ? exception.stack : String(exception));
+      this.logger.error(
+        logPayload,
+        exception instanceof Error ? exception.stack : String(exception),
+      );
 
       if (Sentry.isInitialized()) {
         Sentry.withScope((scope) => {
@@ -60,7 +63,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
             method: request.method,
             url: request.url,
             headers: { 'user-agent': request.headers['user-agent'] },
-            body: request.body as Record<string, unknown>,
+            requestId: request.headers['x-request-id'],
+            contentLength: request.headers['content-length'],
           });
           if (exception instanceof Error) {
             Sentry.captureException(exception);

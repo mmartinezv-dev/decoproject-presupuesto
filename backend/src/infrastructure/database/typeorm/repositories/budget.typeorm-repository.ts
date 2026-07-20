@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { BudgetOrmEntity } from '../entities/budget.orm-entity';
 import { BudgetItemOrmEntity } from '../entities/budget-item.orm-entity';
 import {
@@ -34,75 +34,109 @@ export class BudgetTypeOrmRepository implements IBudgetRepository {
   findById(id: number): Promise<BudgetEntity | null> {
     return this.repo.findOne({
       where: { id },
-      relations: { items: true },
     });
   }
 
   async findNextCorrelativo(): Promise<number> {
-    const result = await this.repo
-      .createQueryBuilder('budget')
-      .withDeleted()
-      .select('MAX(budget.correlativo)', 'max')
-      .getRawOne<{ max: string | null }>();
-
-    return Number(result?.max ?? 0) + 1;
+    const result: unknown = await this.repo.manager.query(
+      'SELECT `nextValue` FROM `budget_sequence` WHERE `id` = 1',
+    );
+    const row = Array.isArray(result)
+      ? (result[0] as Record<string, unknown> | undefined)
+      : undefined;
+    return Number(row?.nextValue ?? 1);
   }
 
   async create(data: Partial<BudgetEntity>): Promise<BudgetEntity> {
-    const shouldFinalize = data.status === 'final';
-
-    const budget = this.repo.create({
-      ...(data as Partial<BudgetOrmEntity>),
-      correlativo: shouldFinalize
-        ? await this.findNextCorrelativo()
-        : undefined,
-      status: data.status ?? 'borrador',
+    return this.repo.manager.transaction(async (manager) => {
+      const repository = manager.getRepository(BudgetOrmEntity);
+      const shouldFinalize = data.status === 'final';
+      const budget = repository.create({
+        ...(data as Partial<BudgetOrmEntity>),
+        notes: data.notes ?? '',
+        visitFindings: data.visitFindings ?? [],
+        visitSummary: data.visitSummary ?? '',
+        preliminaryWorks: data.preliminaryWorks ?? [],
+        specialAnnotations: data.specialAnnotations ?? [],
+        sections: data.sections ?? [],
+        logo: data.logo ?? '',
+        images: data.images ?? [],
+        items: (data.items ?? []) as BudgetItemOrmEntity[],
+        correlativo: shouldFinalize
+          ? await this.reserveNextCorrelativo(manager)
+          : undefined,
+        status: data.status ?? 'borrador',
+      });
+      return this.cleanBudget(await repository.save(budget));
     });
-    const saved = await this.repo.save(budget);
-    saved.items?.forEach((item) => {
-      delete (item as Partial<BudgetItemOrmEntity>).budget;
-    });
-    return saved;
   }
 
   async update(id: number, data: Partial<BudgetEntity>): Promise<BudgetEntity> {
-    const budget = await this.repo.findOne({
-      where: { id },
-      relations: { items: true },
+    return this.repo.manager.transaction(async (manager) => {
+      const repository = manager.getRepository(BudgetOrmEntity);
+      const itemRepository = manager.getRepository(BudgetItemOrmEntity);
+      const budget = await repository.findOne({ where: { id } });
+      if (!budget) {
+        throw new NotFoundException(`Presupuesto #${id} no encontrado`);
+      }
+
+      const isFinalizing =
+        data.status === 'final' && budget.status === 'borrador';
+      const { items, ...plainData } = data;
+      Object.assign(budget, plainData);
+
+      if (items !== undefined) {
+        await itemRepository
+          .createQueryBuilder()
+          .delete()
+          .where('budgetId = :id', { id })
+          .execute();
+        budget.items = items.map((item) => {
+          const itemEntity = itemRepository.create(item);
+          itemEntity.budget = budget;
+          return itemEntity;
+        });
+      }
+
+      if (isFinalizing && !budget.correlativo) {
+        budget.correlativo = await this.reserveNextCorrelativo(manager);
+      }
+
+      return this.cleanBudget(await repository.save(budget));
     });
-    if (!budget) throw new NotFoundException(`Presupuesto #${id} no encontrado`);
-
-    const isFinalizing =
-      data.status === 'final' && budget.status === 'borrador';
-
-    const { items, ...plainData } = data;
-    Object.assign(budget, plainData);
-
-    if (items !== undefined) {
-      budget.items = items.map((item) => {
-        const itemEntity = new BudgetItemOrmEntity();
-        Object.assign(itemEntity, item);
-        itemEntity.budget = budget;
-        return itemEntity;
-      });
-    }
-
-    if (isFinalizing && !budget.correlativo) {
-      budget.correlativo = await this.findNextCorrelativo();
-    }
-
-    const saved = await this.repo.save(budget);
-    saved.items?.forEach((item) => {
-      delete (item as Partial<BudgetItemOrmEntity>).budget;
-    });
-    return saved;
   }
 
   async remove(id: number): Promise<void> {
     const budget = await this.repo.findOne({
       where: { id },
-      relations: { items: true },
     });
     await this.repo.remove(budget!);
+  }
+
+  private async reserveNextCorrelativo(
+    manager: EntityManager,
+  ): Promise<number> {
+    const result: unknown = await manager.query(
+      'SELECT `nextValue` FROM `budget_sequence` WHERE `id` = 1 FOR UPDATE',
+    );
+    const row = Array.isArray(result)
+      ? (result[0] as Record<string, unknown> | undefined)
+      : undefined;
+    const nextValue = Number(row?.nextValue);
+    if (!Number.isSafeInteger(nextValue) || nextValue < 1) {
+      throw new Error('Secuencia de correlativos no inicializada');
+    }
+    await manager.query(
+      'UPDATE `budget_sequence` SET `nextValue` = ? WHERE `id` = 1',
+      [nextValue + 1],
+    );
+    return nextValue;
+  }
+
+  private cleanBudget(budget: BudgetOrmEntity): BudgetEntity {
+    budget.items?.forEach((item) => {
+      delete (item as Partial<BudgetItemOrmEntity>).budget;
+    });
+    return budget;
   }
 }

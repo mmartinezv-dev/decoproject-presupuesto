@@ -68,12 +68,15 @@ export function useBudget() {
   const preliminaryWorks = ref<string[]>([''])
   const specialAnnotations = ref<SpecialAnnotation[]>([createEmptyAnnotation()])
   const saving = ref(false)
+  const budgetDate = ref(new Date())
 
-  const today = new Date().toLocaleDateString('es-CL', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  const today = computed(() =>
+    budgetDate.value.toLocaleDateString('es-CL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }),
+  )
 
   const neto = computed(() =>
     sections.value.reduce(
@@ -197,6 +200,7 @@ export function useBudget() {
     const b = await api.get<Budget>(`/budgets/${id}`)
     if (!b) return undefined
     correlativo.value = b.correlativo ?? null
+    budgetDate.value = b.createdAt ? new Date(b.createdAt) : new Date()
     status.value = b.status ?? 'final'
     draftId.value = b.id ?? null
     company.name = b.companyName
@@ -218,7 +222,44 @@ export function useBudget() {
     logo.value = b.logo || ''
     images.value = b.images || []
 
-    // Reconstruct sections grouping items by section field (preserving order)
+    if (b.sections?.length) {
+      const restoredSections: BudgetSection[] = b.sections.map((section) => ({
+        title: section.title,
+        manualTotal: section.manualTotal ?? null,
+        items: [],
+      }))
+
+      for (const item of b.items || []) {
+        let index = item.sectionIndex ?? -1
+        if (index < 0 || index >= restoredSections.length) {
+          index = restoredSections.findIndex((section) => section.title === item.section)
+        }
+        if (index < 0) {
+          index = restoredSections.push({
+            title: item.section || 'Productos',
+            manualTotal: item.sectionManualTotal ?? null,
+            items: [],
+          }) - 1
+        }
+        restoredSections[index].items.push({
+          id: item.id,
+          productName: item.productName,
+          unit: item.unit,
+          quantity: Number(item.quantity),
+          price: Number(item.price),
+          section: restoredSections[index].title,
+          sectionIndex: index,
+        })
+      }
+
+      for (const section of restoredSections) {
+        if (!section.items.length) section.items.push(createEmptyRow())
+      }
+      sections.value = restoredSections
+      return b.currentStep
+    }
+
+    // Compatibility with budgets saved before section metadata existed.
     const sectionMap = new Map<string, { items: BudgetItem[]; manualTotal: number | null }>()
     for (const item of b.items || []) {
       const title = item.section || 'Productos'
@@ -229,6 +270,7 @@ export function useBudget() {
       }
       section.items.push({
         productName: item.productName,
+        id: item.id,
         unit: item.unit,
         quantity: Number(item.quantity),
         price: Number(item.price),
@@ -264,12 +306,16 @@ export function useBudget() {
       visitSummary: visitSummary.value,
       preliminaryWorks: preliminaryWorks.value.filter(Boolean),
       specialAnnotations: specialAnnotations.value.filter((annotation) => annotation.text.trim()),
+      sections: sections.value.map((section) => ({
+        title: section.title,
+        manualTotal: section.manualTotal ?? null,
+      })),
       logo: logo.value,
       images: images.value,
       neto: neto.value,
       iva: iva.value,
       total: total.value,
-      items: sections.value.flatMap((s) =>
+      items: sections.value.flatMap((s, sectionIndex) =>
         s.items
           .filter((i) => i.productName)
           .map((i) => ({
@@ -279,7 +325,7 @@ export function useBudget() {
             price: i.price,
             subtotal: itemSubtotal(i),
             section: s.title,
-            sectionManualTotal: s.manualTotal ?? null,
+            sectionIndex,
           })),
       ),
     }

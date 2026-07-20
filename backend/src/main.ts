@@ -13,6 +13,9 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './presentation/http/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './presentation/http/interceptors/logging.interceptor';
 import { createWinstonLogger } from './infrastructure/config/logger.config';
+import { validateRuntimeEnvironment } from './infrastructure/config/environment.config';
+
+validateRuntimeEnvironment();
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -29,6 +32,7 @@ async function bootstrap() {
     logger,
   });
 
+  app.set('trust proxy', 1);
   mkdirSync(join(process.cwd(), 'uploads'), { recursive: true });
 
   app.setGlobalPrefix('api', { exclude: ['/'] });
@@ -36,7 +40,14 @@ async function bootstrap() {
   app.use(urlencoded({ extended: true, limit: '50mb' }));
   app.use(cookieParser());
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
-  app.enableCors({ credentials: true, origin: true });
+  const corsOrigins = process.env.CORS_ORIGINS?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  if (corsOrigins?.length) {
+    app.enableCors({ credentials: true, origin: corsOrigins });
+  } else if (process.env.NODE_ENV !== 'production') {
+    app.enableCors({ credentials: true, origin: 'http://localhost:5173' });
+  }
 
   app.useGlobalPipes(
     new ValidationPipe({

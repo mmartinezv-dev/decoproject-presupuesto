@@ -93,17 +93,29 @@ async function handleSave() {
 }
 
 onMounted(async () => {
-  try {
-    clients.value = await api.get('/clients')
+  const [clientsResult, budgetResult] = await Promise.allSettled([
+    api.get<Client[]>('/clients'),
+    props.id ? loadBudget(props.id) : Promise.resolve(undefined),
+  ])
+
+  if (clientsResult.status === 'fulfilled') {
+    clients.value = clientsResult.value
+  } else {
+    toast.error('No se pudo cargar la lista de clientes.')
+  }
+
+  if (budgetResult.status === 'fulfilled') {
+    const savedStep = budgetResult.value
     if (props.id) {
-      const savedStep = await loadBudget(props.id)
       if (status.value === 'borrador' && savedStep) {
         currentStep.value = savedStep
       }
     }
-  } finally {
-    loading.value = false
+  } else {
+    toast.error('No se pudo cargar el presupuesto.')
   }
+
+  loading.value = false
 })
 </script>
 

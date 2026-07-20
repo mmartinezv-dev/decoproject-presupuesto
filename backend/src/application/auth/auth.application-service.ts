@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenStore } from '../../infrastructure/auth/refresh-token.store';
+import { getRequiredEnvironment } from '../../infrastructure/config/environment.config';
 
 @Injectable()
 export class AuthApplicationService {
@@ -13,8 +14,8 @@ export class AuthApplicationService {
     username: string,
     password: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const validUser = process.env.AUTH_USER ?? 'admin';
-    const validPass = process.env.AUTH_PASS ?? 'decoproject2024';
+    const validUser = getRequiredEnvironment('AUTH_USER');
+    const validPass = getRequiredEnvironment('AUTH_PASS');
 
     if (username !== validUser || password !== validPass) {
       throw new UnauthorizedException('Credenciales incorrectas');
@@ -25,14 +26,14 @@ export class AuthApplicationService {
     const accessToken = this.jwtService.sign(
       { sub: username },
       {
-        secret: process.env.JWT_ACCESS_SECRET ?? 'access-secret',
+        secret: getRequiredEnvironment('JWT_ACCESS_SECRET'),
         expiresIn: Number(process.env.JWT_ACCESS_EXPIRES) || 900,
       },
     );
     const refreshToken = this.jwtService.sign(
       { sub: username, jti },
       {
-        secret: process.env.JWT_REFRESH_SECRET ?? 'refresh-secret',
+        secret: getRequiredEnvironment('JWT_REFRESH_SECRET'),
         expiresIn: ttl,
       },
     );
@@ -45,7 +46,7 @@ export class AuthApplicationService {
     let payload: { sub: string; jti: string };
     try {
       payload = this.jwtService.verify(oldRefreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET ?? 'refresh-secret',
+        secret: getRequiredEnvironment('JWT_REFRESH_SECRET'),
       });
     } catch {
       throw new UnauthorizedException('Refresh token inválido');
@@ -58,14 +59,14 @@ export class AuthApplicationService {
     const accessToken = this.jwtService.sign(
       { sub: payload.sub },
       {
-        secret: process.env.JWT_ACCESS_SECRET ?? 'access-secret',
+        secret: getRequiredEnvironment('JWT_ACCESS_SECRET'),
         expiresIn: Number(process.env.JWT_ACCESS_EXPIRES) || 900,
       },
     );
     const refreshToken = this.jwtService.sign(
       { sub: payload.sub, jti: newJti },
       {
-        secret: process.env.JWT_REFRESH_SECRET ?? 'refresh-secret',
+        secret: getRequiredEnvironment('JWT_REFRESH_SECRET'),
         expiresIn: ttl,
       },
     );
@@ -75,7 +76,7 @@ export class AuthApplicationService {
   async logout(refreshToken: string): Promise<void> {
     try {
       const payload = this.jwtService.verify<{ jti: string }>(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET ?? 'refresh-secret',
+        secret: getRequiredEnvironment('JWT_REFRESH_SECRET'),
       });
       await this.refreshTokenStore.revoke(payload.jti);
     } catch {

@@ -56,7 +56,7 @@ export class BudgetOrmEntity {
   @Column({ default: '' })
   clientPhone: string;
 
-  @Column({ type: 'text', default: '' })
+  @Column({ type: 'text' })
   notes: string;
 
   @Column({
@@ -73,16 +73,19 @@ export class BudgetOrmEntity {
   })
   visitFindings: { text: string; images: { src: string; caption: string }[] }[];
 
-  @Column({ type: 'text', default: '' })
+  @Column({ type: 'text' })
   visitSummary: string;
 
-  @Column({ type: 'simple-json', nullable: true, default: '[]' })
+  @Column({ type: 'simple-json', nullable: true })
   preliminaryWorks: string[];
 
-  @Column({ type: 'simple-json', nullable: true, default: '[]' })
+  @Column({ type: 'simple-json', nullable: true })
   specialAnnotations: { title: string; text: string }[];
 
-  @Column({ type: 'longtext', default: '' })
+  @Column({ type: 'simple-json', nullable: true })
+  sections: { title: string; manualTotal: number | null }[];
+
+  @Column({ type: 'longtext' })
   logo: string;
 
   @Column({
@@ -129,7 +132,6 @@ export class BudgetOrmEntity {
   @OneToMany(() => BudgetItemOrmEntity, (item) => item.budget, {
     cascade: true,
     eager: true,
-    orphanedRowAction: 'delete',
   })
   items: BudgetItemOrmEntity[];
 }

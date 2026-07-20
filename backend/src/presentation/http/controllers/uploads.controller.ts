@@ -27,7 +27,16 @@ export class UploadsController {
       fileFilter: (_req, file, cb) => {
         const ext = extname(file.originalname).toLowerCase();
         const allowedExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
-        if (!allowedExtensions.includes(ext)) {
+        const allowedMimeTypes = [
+          'image/png',
+          'image/jpeg',
+          'image/gif',
+          'image/webp',
+        ];
+        if (
+          !allowedExtensions.includes(ext) ||
+          !allowedMimeTypes.includes(file.mimetype)
+        ) {
           return cb(
             new BadRequestException(
               'Formato de imagen no permitido (solo png, jpg, jpeg, gif, webp)',
@@ -37,7 +46,12 @@ export class UploadsController {
         }
         cb(null, true);
       },
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+      limits: {
+        fileSize: 10 * 1024 * 1024,
+        files: 20,
+        fields: 0,
+        parts: 20,
+      },
     }),
   )
   upload(@UploadedFiles() files: Express.Multer.File[]) {

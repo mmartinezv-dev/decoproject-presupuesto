@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthApplicationService } from '../../../application/auth/auth.application-service';
 import { Public } from '../decorators/public.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 class LoginDto {
   @IsString()
@@ -46,6 +47,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Iniciar sesión' })
   @ApiResponse({ status: 200, description: 'Retorna access token' })
   async login(
@@ -62,6 +64,7 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
+  @Throttle({ default: { ttl: 60_000, limit: 30 } })
   @ApiOperation({ summary: 'Renovar access token' })
   @ApiResponse({ status: 200 })
   async refresh(

@@ -4,7 +4,7 @@
 set -e
 
 APP_DIR="/home/admin/app"
-REPO_URL="https://github.com/YOUR_USER/presupuestos-constru.git"  # <-- update this
+REPO_URL="https://github.com/mmartinezv-dev/decoproject-presupuesto.git"
 
 echo "=== [1/7] Installing system packages ==="
 sudo apt-get update -y
@@ -27,8 +27,9 @@ git clone "$REPO_URL" "$APP_DIR"
 
 echo "=== [5/7] Building backend ==="
 cd "$APP_DIR/backend"
-npm ci --omit=dev
+npm ci
 npm run build
+npm prune --omit=dev
 
 echo "=== [6/7] Building frontend ==="
 cd "$APP_DIR/frontend"

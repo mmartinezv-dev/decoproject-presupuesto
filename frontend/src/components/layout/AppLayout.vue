@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useColorMode } from '@vueuse/core'
+import { ref, watchEffect } from 'vue'
 import { Toaster } from 'vue-sonner'
 import AppSidebar from './AppSidebar.vue'
 import AppHeader from './AppHeader.vue'
 import CommandPalette from './CommandPalette.vue'
 
-const mode = useColorMode()
-const isDark = ref(mode.value === 'dark')
+const storedMode = localStorage.getItem('color-mode')
+const isDark = ref(
+  storedMode ? storedMode === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches,
+)
+
+watchEffect(() => {
+  document.documentElement.classList.toggle('dark', isDark.value)
+  localStorage.setItem('color-mode', isDark.value ? 'dark' : 'light')
+})
 
 function toggleDark() {
   isDark.value = !isDark.value
-  mode.value = isDark.value ? 'dark' : 'light'
 }
 
 const sidebarCollapsed = ref(false)

@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { getRequiredEnvironment } from '../../../infrastructure/config/environment.config';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -31,7 +32,7 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       request.user = this.jwtService.verify<Record<string, unknown>>(token, {
-        secret: process.env.JWT_ACCESS_SECRET ?? 'access-secret',
+        secret: getRequiredEnvironment('JWT_ACCESS_SECRET'),
       });
     } catch {
       throw new UnauthorizedException();
