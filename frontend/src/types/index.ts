@@ -28,11 +28,13 @@ export interface BudgetItem {
   quantity: number
   price: number
   section?: string
+  sectionManualTotal?: number | null
 }
 
 export interface BudgetSection {
   title: string
   items: BudgetItem[]
+  manualTotal?: number | null
 }
 
 export interface SpecialAnnotation {

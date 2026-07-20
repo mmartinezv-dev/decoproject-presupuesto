@@ -38,4 +38,15 @@ export class BudgetItemOrmEntity {
     transformer: { to: (v: number) => v, from: (v: string) => parseFloat(v) },
   })
   subtotal: number;
+
+  @Column('decimal', {
+    precision: 14,
+    scale: 2,
+    nullable: true,
+    transformer: {
+      to: (v: number | null) => v,
+      from: (v: string | null) => (v === null ? null : parseFloat(v)),
+    },
+  })
+  sectionManualTotal: number | null;
 }

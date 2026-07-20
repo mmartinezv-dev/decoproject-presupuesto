@@ -30,4 +30,9 @@ export class CreateBudgetItemDto {
   @IsNumber()
   @Min(0)
   subtotal: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  sectionManualTotal?: number | null;
 }

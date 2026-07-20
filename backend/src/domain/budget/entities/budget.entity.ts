@@ -6,6 +6,7 @@ export interface BudgetItemEntity {
   quantity: number;
   price: number;
   subtotal: number;
+  sectionManualTotal?: number | null;
 }
 
 export interface BudgetEntity {

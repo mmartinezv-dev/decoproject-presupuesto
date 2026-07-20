@@ -9,6 +9,7 @@ const props = defineProps<{
   sectionIndex: number
   title: string
   items: BudgetItem[]
+  manualTotal: number | null
   searchResults: Product[]
   activeSectionIndex: number
   activeRowIndex: number
@@ -23,6 +24,7 @@ const emit = defineEmits<{
   removeRow: [sectionIndex: number, rowIndex: number]
   updateItem: [sectionIndex: number, rowIndex: number, field: keyof BudgetItem, value: string | number]
   updateTitle: [sectionIndex: number, title: string]
+  updateManualTotal: [sectionIndex: number, total: number | null]
   removeSection: [sectionIndex: number]
 }>()
 
@@ -58,6 +60,8 @@ function rowSubtotal(row: BudgetItem) {
 const sectionTotal = computed(() =>
   props.items.reduce((sum, r) => sum + r.quantity * r.price, 0),
 )
+const effectiveSectionTotal = computed(() => props.manualTotal ?? sectionTotal.value)
+const hasManualTotal = computed(() => props.manualTotal !== null)
 
 const inputRefs = ref<HTMLInputElement[]>([])
 
@@ -184,10 +188,22 @@ const dropdownStyle = computed(() => {
         <tfoot>
           <tr class="bg-zinc-50 dark:bg-zinc-800/50 border-t-2 border-zinc-200 dark:border-zinc-700">
             <td colspan="4" class="py-3 px-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 text-right uppercase tracking-widest">
-              Subtotal {{ title }}
+              Total {{ title }}
+              <span v-if="hasManualTotal" class="no-print normal-case tracking-normal text-amber-600 dark:text-amber-400">
+                manual
+              </span>
             </td>
             <td class="py-3 px-4 text-right font-bold text-zinc-800 dark:text-zinc-200">
-              {{ clp(sectionTotal) }}
+              <input
+                :value="effectiveSectionTotal"
+                type="number"
+                min="0"
+                step="0.01"
+                class="no-print w-full rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-right text-sm font-bold focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                title="Editar total de esta tabla"
+                @input="emit('updateManualTotal', sectionIndex, ($event.target as HTMLInputElement).value === '' ? null : +($event.target as HTMLInputElement).value)"
+              />
+              <span class="hidden print:inline">{{ clp(effectiveSectionTotal) }}</span>
             </td>
             <td class="no-print" />
           </tr>

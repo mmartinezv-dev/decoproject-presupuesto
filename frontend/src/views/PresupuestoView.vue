@@ -28,7 +28,7 @@ const currentStep = ref(1)
 const {
   company, client, correlativo, logo, notes, sections, images, saving, today,
   neto, iva, total,
-  addRow, removeRow, addSection, removeSection, updateSectionTitle,
+  addRow, removeRow, addSection, removeSection, updateSectionTitle, updateSectionManualTotal,
   visitFindings, visitSummary, preliminaryWorks, specialAnnotations,
   addFinding, removeFinding, updateFinding,
   addFindingImages, removeFindingImage, updateFindingImageCaption,
@@ -61,10 +61,12 @@ function updateClientField(field: string, value: string) {
 
 function updateItem(sectionIndex: number, rowIndex: number, field: string, value: string | number) {
   ;(sections.value[sectionIndex].items[rowIndex] as Record<string, unknown>)[field] = value
+  sections.value[sectionIndex].manualTotal = null
 }
 
 function pickProduct(product: Parameters<typeof pick>[0], sectionIndex: number, rowIndex: number) {
   pick(product, sections.value[sectionIndex].items[rowIndex])
+  sections.value[sectionIndex].manualTotal = null
 }
 
 function handlePrint() {
@@ -229,6 +231,7 @@ onMounted(async () => {
           :section-index="si"
           :title="section.title"
           :items="section.items"
+          :manual-total="section.manualTotal ?? null"
           :search-results="searchResults"
           :active-section-index="activeSectionIndex"
           :active-row-index="activeRowIndex"
@@ -240,6 +243,7 @@ onMounted(async () => {
           @remove-row="removeRow"
           @update-item="updateItem"
           @update-title="updateSectionTitle"
+          @update-manual-total="updateSectionManualTotal"
           @remove-section="removeSection"
         />
 

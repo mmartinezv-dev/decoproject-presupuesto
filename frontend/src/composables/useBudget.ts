@@ -77,7 +77,7 @@ export function useBudget() {
 
   const neto = computed(() =>
     sections.value.reduce(
-      (sum, s) => sum + s.items.reduce((s2, r) => s2 + r.quantity * r.price, 0),
+      (sum, s) => sum + getSectionTotal(s),
       0,
     ),
   )
@@ -88,13 +88,23 @@ export function useBudget() {
     return row.quantity * row.price
   }
 
+  function getCalculatedSectionTotal(section: BudgetSection) {
+    return section.items.reduce((sum, row) => sum + itemSubtotal(row), 0)
+  }
+
+  function getSectionTotal(section: BudgetSection) {
+    return section.manualTotal ?? getCalculatedSectionTotal(section)
+  }
+
   // --- Row management ---
   function addRow(sectionIndex: number) {
     sections.value[sectionIndex].items.push(createEmptyRow())
+    sections.value[sectionIndex].manualTotal = null
   }
 
   function removeRow(sectionIndex: number, rowIndex: number) {
     sections.value[sectionIndex].items.splice(rowIndex, 1)
+    sections.value[sectionIndex].manualTotal = null
   }
 
   // --- Section management ---
@@ -108,6 +118,10 @@ export function useBudget() {
 
   function updateSectionTitle(sectionIndex: number, title: string) {
     sections.value[sectionIndex].title = title
+  }
+
+  function updateSectionManualTotal(sectionIndex: number, total: number | null) {
+    sections.value[sectionIndex].manualTotal = total
   }
 
   // --- Inspection ---
@@ -205,11 +219,15 @@ export function useBudget() {
     images.value = b.images || []
 
     // Reconstruct sections grouping items by section field (preserving order)
-    const sectionMap = new Map<string, BudgetItem[]>()
+    const sectionMap = new Map<string, { items: BudgetItem[]; manualTotal: number | null }>()
     for (const item of b.items || []) {
       const title = item.section || 'Productos'
-      if (!sectionMap.has(title)) sectionMap.set(title, [])
-      sectionMap.get(title)!.push({
+      if (!sectionMap.has(title)) sectionMap.set(title, { items: [], manualTotal: null })
+      const section = sectionMap.get(title)!
+      if (item.sectionManualTotal !== undefined && item.sectionManualTotal !== null) {
+        section.manualTotal = Number(item.sectionManualTotal)
+      }
+      section.items.push({
         productName: item.productName,
         unit: item.unit,
         quantity: Number(item.quantity),
@@ -220,7 +238,11 @@ export function useBudget() {
     if (sectionMap.size === 0) {
       sections.value = [{ title: 'Productos', items: [createEmptyRow()] }]
     } else {
-      sections.value = [...sectionMap.entries()].map(([title, items]) => ({ title, items }))
+      sections.value = [...sectionMap.entries()].map(([title, section]) => ({
+        title,
+        items: section.items,
+        manualTotal: section.manualTotal,
+      }))
     }
 
     return b.currentStep
@@ -257,6 +279,7 @@ export function useBudget() {
             price: i.price,
             subtotal: itemSubtotal(i),
             section: s.title,
+            sectionManualTotal: s.manualTotal ?? null,
           })),
       ),
     }
@@ -320,6 +343,7 @@ export function useBudget() {
     addSection,
     removeSection,
     updateSectionTitle,
+    updateSectionManualTotal,
     visitFindings,
     visitSummary,
     preliminaryWorks,
