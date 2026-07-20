@@ -11,6 +11,7 @@ import SkeletonLoader from '../shared/ui/SkeletonLoader.vue'
 import BudgetStepBar from '../components/budget/BudgetStepBar.vue'
 import BudgetHeader from '../components/budget/BudgetHeader.vue'
 import BudgetInspection from '../components/budget/BudgetInspection.vue'
+import BudgetSpecialAnnotations from '../components/budget/BudgetSpecialAnnotations.vue'
 import BudgetClientSection from '../components/budget/BudgetClientSection.vue'
 import BudgetItemsTable from '../components/budget/BudgetItemsTable.vue'
 import BudgetTotals from '../components/budget/BudgetTotals.vue'
@@ -21,17 +22,18 @@ import BudgetActions from '../components/budget/BudgetActions.vue'
 const props = defineProps<{ id?: string }>()
 const router = useRouter()
 
-const STEPS = ['Empresa', 'Cliente', 'Inspección', 'Detalle', 'Finalizar']
+const STEPS = ['Empresa', 'Cliente', 'Inspección', 'Anotaciones', 'Detalle', 'Finalizar']
 const currentStep = ref(1)
 
 const {
   company, client, correlativo, logo, notes, sections, images, saving, today,
   neto, iva, total,
   addRow, removeRow, addSection, removeSection, updateSectionTitle,
-  visitFindings, visitSummary, preliminaryWorks,
+  visitFindings, visitSummary, preliminaryWorks, specialAnnotations,
   addFinding, removeFinding, updateFinding,
   addFindingImages, removeFindingImage, updateFindingImageCaption,
   addWork, removeWork, updateWork,
+  addSpecialAnnotation, removeSpecialAnnotation, updateSpecialAnnotation,
   addImages, removeImage, updateImageCaption,
   handleLogoChange,
   loadBudget, saveDraft, saveBudget, status,
@@ -197,8 +199,29 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- ── STEP 4: Detalle ── -->
+      <!-- ── STEP 4: Anotaciones ── -->
       <div v-show="currentStep === 4" class="print:!block">
+        <BudgetSpecialAnnotations
+          :annotations="specialAnnotations"
+          @add="addSpecialAnnotation"
+          @remove="removeSpecialAnnotation"
+          @update="updateSpecialAnnotation"
+        />
+        <div class="no-print flex justify-between mt-6">
+          <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 3">
+            ← Anterior
+          </button>
+          <button class="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-semibold rounded-lg hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-500/10 transition-colors" :disabled="saving" @click="handleSaveDraft">
+            {{ saving ? 'Guardando...' : 'Guardar borrador' }}
+          </button>
+          <button class="px-5 py-2.5 bg-brand-800 text-white text-sm font-semibold rounded-lg hover:bg-brand-900 transition-colors" @click="currentStep = 5">
+            Siguiente →
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 5: Detalle ── -->
+      <div v-show="currentStep === 5" class="print:!block">
         <BudgetItemsTable
           v-for="(section, si) in sections"
           :key="si"
@@ -231,20 +254,20 @@ onMounted(async () => {
         <BudgetTotals :neto="neto" :iva="iva" :total="total" />
 
         <div class="no-print flex justify-between mt-6">
-          <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 3">
+          <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 4">
             ← Anterior
           </button>
           <button class="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-semibold rounded-lg hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-500/10 transition-colors" :disabled="saving" @click="handleSaveDraft">
             {{ saving ? 'Guardando...' : 'Guardar borrador' }}
           </button>
-          <button class="px-5 py-2.5 bg-brand-800 text-white text-sm font-semibold rounded-lg hover:bg-brand-900 transition-colors" @click="currentStep = 5">
+          <button class="px-5 py-2.5 bg-brand-800 text-white text-sm font-semibold rounded-lg hover:bg-brand-900 transition-colors" @click="currentStep = 6">
             Siguiente →
           </button>
         </div>
       </div>
 
-      <!-- ── STEP 5: Finalizar ── -->
-      <div v-show="currentStep === 5" class="print:!block">
+      <!-- ── STEP 6: Finalizar ── -->
+      <div v-show="currentStep === 6" class="print:!block">
         <BudgetImages
           title="Diseños y Renders (opcional)"
           :images="images"
@@ -256,7 +279,7 @@ onMounted(async () => {
         <BudgetNotes v-model="notes" />
 
         <div class="no-print flex justify-between mt-6 mb-4">
-          <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 4">
+          <button class="px-5 py-2.5 border border-zinc-300 text-zinc-600 text-sm font-semibold rounded-lg hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors" @click="currentStep = 5">
             ← Anterior
           </button>
           <button class="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-semibold rounded-lg hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-500/10 transition-colors" :disabled="saving" @click="handleSaveDraft">

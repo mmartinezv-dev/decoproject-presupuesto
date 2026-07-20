@@ -79,6 +79,9 @@ export class BudgetOrmEntity {
   @Column({ type: 'simple-json', nullable: true, default: '[]' })
   preliminaryWorks: string[];
 
+  @Column({ type: 'simple-json', nullable: true, default: '[]' })
+  specialAnnotations: string[];
+
   @Column({ type: 'longtext', default: '' })
   logo: string;
 

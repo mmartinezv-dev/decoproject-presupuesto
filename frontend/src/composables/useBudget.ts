@@ -30,6 +30,7 @@ export function useBudget() {
   const visitFindings = ref<{ text: string; images: { src: string; caption: string }[] }[]>([{ text: '', images: [] }])
   const visitSummary = ref('')
   const preliminaryWorks = ref<string[]>([''])
+  const specialAnnotations = ref<string[]>([''])
   const saving = ref(false)
 
   const today = new Date().toLocaleDateString('es-CL', {
@@ -109,6 +110,10 @@ export function useBudget() {
   function removeWork(i: number) { preliminaryWorks.value.splice(i, 1) }
   function updateWork(i: number, v: string) { preliminaryWorks.value[i] = v }
 
+  function addSpecialAnnotation() { specialAnnotations.value.push('') }
+  function removeSpecialAnnotation(i: number) { specialAnnotations.value.splice(i, 1) }
+  function updateSpecialAnnotation(i: number, v: string) { specialAnnotations.value[i] = v }
+
   // --- Evidence images ---
   async function addImages(e: Event) {
     const input = e.target as HTMLInputElement
@@ -158,6 +163,7 @@ export function useBudget() {
     visitFindings.value = b.visitFindings?.length ? b.visitFindings : [{ text: '', images: [] }]
     visitSummary.value = b.visitSummary || ''
     preliminaryWorks.value = b.preliminaryWorks?.length ? b.preliminaryWorks : ['']
+    specialAnnotations.value = b.specialAnnotations?.length ? b.specialAnnotations : ['']
     logo.value = b.logo || ''
     images.value = b.images || []
 
@@ -198,6 +204,7 @@ export function useBudget() {
       visitFindings: visitFindings.value.filter((f) => f.text || f.images.length),
       visitSummary: visitSummary.value,
       preliminaryWorks: preliminaryWorks.value.filter(Boolean),
+      specialAnnotations: specialAnnotations.value.filter(Boolean),
       logo: logo.value,
       images: images.value,
       neto: neto.value,
@@ -241,7 +248,7 @@ export function useBudget() {
 
   async function saveBudget(existingId?: string): Promise<boolean> {
     saving.value = true
-    const payload = { ...buildPayload(), status: 'final', currentStep: 5 }
+    const payload = { ...buildPayload(), status: 'final', currentStep: 6 }
     try {
       const id = existingId || (draftId.value ? String(draftId.value) : null)
       if (id) {
@@ -279,9 +286,11 @@ export function useBudget() {
     visitFindings,
     visitSummary,
     preliminaryWorks,
+    specialAnnotations,
     addFinding, removeFinding, updateFinding,
     addFindingImages, removeFindingImage, updateFindingImageCaption,
     addWork, removeWork, updateWork,
+    addSpecialAnnotation, removeSpecialAnnotation, updateSpecialAnnotation,
     addImages,
     removeImage,
     updateImageCaption,

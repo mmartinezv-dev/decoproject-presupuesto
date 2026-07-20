@@ -68,6 +68,11 @@ export class CreateBudgetDto {
   @IsString({ each: true })
   preliminaryWorks?: string[];
 
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  specialAnnotations?: string[];
+
   @IsString()
   @IsOptional()
   logo?: string;
@@ -97,7 +102,7 @@ export class CreateBudgetDto {
 
   @IsNumber()
   @Min(1)
-  @Max(5)
+  @Max(6)
   @IsOptional()
   currentStep?: number;
 
